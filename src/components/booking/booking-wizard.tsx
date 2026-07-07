@@ -42,10 +42,12 @@ export function BookingWizard({
   tenant,
   services,
   barbers,
+  noHeader,
 }: {
   tenant: Tenant;
   services: Service[];
   barbers: Barber[];
+  noHeader?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
 
@@ -125,19 +127,22 @@ export function BookingWizard({
   return (
     <div
       className={cn(
-        "mx-auto flex flex-col gap-6 px-6 py-10",
-        step === 0 ? "max-w-2xl" : "max-w-lg"
+        "flex flex-col gap-6",
+        !noHeader && "mx-auto px-6 py-10",
+        !noHeader && (step === 0 ? "max-w-2xl" : "max-w-lg")
       )}
     >
-      <div className="flex items-center gap-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Scissors className="h-4 w-4" />
-        </span>
-        <div>
-          <p className="font-semibold tracking-tight">{tenant.name}</p>
-          <p className="text-xs text-muted-foreground">Reserva tu cita</p>
+      {!noHeader && (
+        <div className="flex items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Scissors className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="font-semibold tracking-tight">{tenant.name}</p>
+            <p className="text-xs text-muted-foreground">Reserva tu cita</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {step > 0 && step < 3 && (
         <button

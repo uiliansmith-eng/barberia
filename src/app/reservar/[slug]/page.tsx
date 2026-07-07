@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { BookingWizard } from "@/components/booking/booking-wizard";
+import { BookingPortal } from "@/components/booking/booking-portal";
 
 type BookingInfo = {
   tenant: { id: string; name: string; slug: string; logo_url: string | null };
@@ -41,7 +41,7 @@ export default async function BookingPage({
 
   return (
     <div className="dark bg-mesh-dark bg-background text-foreground min-h-screen">
-      <BookingWizard
+      <BookingPortal
         tenant={info.tenant}
         services={info.services}
         barbers={info.barbers}

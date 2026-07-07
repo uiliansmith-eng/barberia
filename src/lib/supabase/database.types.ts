@@ -522,6 +522,10 @@ export type Database = {
         }
         Returns: Json
       }
+      public_customer_lookup: {
+        Args: { p_phone: string; p_tenant_id: string }
+        Returns: Json
+      }
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
