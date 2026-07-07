@@ -36,7 +36,7 @@ export function Footer() {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Scissors className="h-4 w-4" />
               </span>
-              BarberFlow AI
+              BarberOS
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
               El sistema operativo para barberías modernas.
@@ -63,7 +63,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} BarberFlow AI. Todos los derechos reservados.
+          © {new Date().getFullYear()} BarberOS. Todos los derechos reservados.
         </div>
       </div>
     </footer>

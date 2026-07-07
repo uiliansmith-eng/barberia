@@ -7,7 +7,7 @@ import { NewBarberButton } from "@/components/employees/new-barber-button";
 import { BarberRowActions } from "@/components/employees/barber-row-actions";
 
 export const metadata: Metadata = {
-  title: "Empleados — BarberFlow AI",
+  title: "Empleados — BarberOS",
 };
 
 export default async function EmployeesPage() {

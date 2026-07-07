@@ -9,7 +9,7 @@ const faqs = [
   {
     question: "¿Necesito tarjeta de crédito para la prueba gratuita?",
     answer:
-      "No. Puedes registrar tu barbería y usar BarberFlow AI durante 14 días sin ingresar ningún método de pago.",
+      "No. Puedes registrar tu barbería y usar BarberOS durante 14 días sin ingresar ningún método de pago.",
   },
   {
     question: "¿Puedo gestionar varias sucursales?",

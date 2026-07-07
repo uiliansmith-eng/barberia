@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { UpdatePasswordForm } from "@/components/auth/update-password-form";
 
 export const metadata: Metadata = {
-  title: "Actualizar contraseña — BarberFlow AI",
+  title: "Actualizar contraseña — BarberOS",
 };
 
 export default function UpdatePasswordPage() {

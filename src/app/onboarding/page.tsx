@@ -3,7 +3,7 @@ import { Scissors } from "lucide-react";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 
 export const metadata: Metadata = {
-  title: "Configura tu barbería — BarberFlow AI",
+  title: "Configura tu barbería — BarberOS",
 };
 
 export default function OnboardingPage() {
@@ -13,7 +13,7 @@ export default function OnboardingPage() {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Scissors className="h-4 w-4" />
         </span>
-        BarberFlow AI
+        BarberOS
       </div>
 
       <div className="glass w-full max-w-sm rounded-2xl p-8 shadow-lg">

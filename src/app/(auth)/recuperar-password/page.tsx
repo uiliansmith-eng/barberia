@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 export const metadata: Metadata = {
-  title: "Recuperar contraseña — BarberFlow AI",
+  title: "Recuperar contraseña — BarberOS",
 };
 
 export default function ForgotPasswordPage() {

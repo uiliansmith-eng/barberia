@@ -7,7 +7,7 @@ import { NewServiceButton } from "@/components/services/new-service-button";
 import { ServiceRowActions } from "@/components/services/service-row-actions";
 
 export const metadata: Metadata = {
-  title: "Servicios — BarberFlow AI",
+  title: "Servicios — BarberOS",
 };
 
 export default async function ServicesPage() {

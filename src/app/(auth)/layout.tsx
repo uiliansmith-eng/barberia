@@ -15,7 +15,7 @@ export default function AuthLayout({
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Scissors className="h-4 w-4" />
         </span>
-        BarberFlow AI
+        BarberOS
       </Link>
       <div className="glass w-full max-w-sm rounded-2xl p-8 shadow-lg">
         {children}

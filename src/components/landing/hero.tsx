@@ -32,7 +32,7 @@ export function Hero() {
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
           Reservas, clientes, agenda y fidelización en un solo lugar.
-          BarberFlow AI automatiza lo operativo para que tu equipo se enfoque
+          BarberOS automatiza lo operativo para que tu equipo se enfoque
           en cortar el pelo, no en el papeleo.
         </p>
 
@@ -70,7 +70,7 @@ export function Hero() {
             <span className="h-3 w-3 rounded-full bg-green-400" />
             <span className="ml-3 flex items-center gap-1.5 text-xs text-muted-foreground">
               <CalendarCheck className="h-3.5 w-3.5" />
-              app.barberflow.ai/agenda
+              app.barberos.ai/agenda
             </span>
           </div>
           <div className="grid grid-cols-1 gap-3 p-6 sm:grid-cols-3">

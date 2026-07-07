@@ -9,7 +9,7 @@ import { CustomerRowActions } from "@/components/customers/customer-row-actions"
 import { toWallClockDate } from "@/lib/time";
 
 export const metadata: Metadata = {
-  title: "Cliente — BarberFlow AI",
+  title: "Cliente — BarberOS",
 };
 
 const statusLabels: Record<string, string> = {

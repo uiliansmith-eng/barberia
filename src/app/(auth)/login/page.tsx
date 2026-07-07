@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
-  title: "Iniciar sesión — BarberFlow AI",
+  title: "Iniciar sesión — BarberOS",
 };
 
 export default async function LoginPage({

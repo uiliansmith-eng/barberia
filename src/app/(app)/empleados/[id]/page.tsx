@@ -10,7 +10,7 @@ import { ScheduleForm } from "@/components/employees/schedule-form";
 import { toWallClockDate } from "@/lib/time";
 
 export const metadata: Metadata = {
-  title: "Barbero — BarberFlow AI",
+  title: "Barbero — BarberOS",
 };
 
 const statusLabels: Record<string, string> = {

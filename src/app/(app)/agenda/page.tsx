@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Agenda — BarberFlow AI",
+  title: "Agenda — BarberOS",
 };
 
 export default async function AgendaPage({

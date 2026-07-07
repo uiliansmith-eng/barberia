@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BarberFlow AI — El sistema operativo de tu barbería",
+  title: "BarberOS — El sistema operativo de tu barbería",
   description:
     "Reservas, clientes, fidelización y marketing automatizado para barberías modernas. Empieza gratis 14 días.",
 };

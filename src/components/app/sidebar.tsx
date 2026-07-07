@@ -36,7 +36,7 @@ export function AppSidebar() {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
           <Scissors className="h-4 w-4" />
         </span>
-        BarberFlow AI
+        BarberOS
       </Link>
 
       <nav className="flex flex-1 flex-col gap-1 text-sm">
