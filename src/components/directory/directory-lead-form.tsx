@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useActionState, useState } from "react";
+import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import {
   submitDirectoryLead,
   type DirectoryLeadActionState,
@@ -29,11 +29,15 @@ const sourceOptions = [
   { value: "team", label: "Trabajo para BarberOS" },
 ];
 
+let nextRowId = 0;
+
 export function DirectoryLeadForm() {
   const [state, action, pending] = useActionState<
     DirectoryLeadActionState,
     FormData
   >(submitDirectoryLead, null);
+
+  const [rows, setRows] = useState(() => [{ id: nextRowId++ }]);
 
   if (state?.success) {
     return (
@@ -80,6 +84,16 @@ export function DirectoryLeadForm() {
         </Field>
 
         <Field>
+          <FieldLabel htmlFor="address">Dirección</FieldLabel>
+          <Input
+            id="address"
+            name="address"
+            placeholder="Ej. Calle Mayor 12"
+            required
+          />
+        </Field>
+
+        <Field>
           <FieldLabel htmlFor="city">Ciudad</FieldLabel>
           <Input id="city" name="city" placeholder="Ej. Madrid" />
           <FieldDescription>Opcional.</FieldDescription>
@@ -104,6 +118,49 @@ export function DirectoryLeadForm() {
               ))}
             </SelectContent>
           </Select>
+        </Field>
+
+        <Field>
+          <FieldLabel>Servicios y precios</FieldLabel>
+          <div className="flex flex-col gap-2">
+            {rows.map((row, i) => (
+              <div key={row.id} className="flex items-center gap-2">
+                <Input
+                  name="serviceName"
+                  placeholder="Ej. Corte de pelo"
+                  className="flex-1"
+                />
+                <Input
+                  name="servicePrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="Precio €"
+                  className="w-28"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRows((r) => r.filter((_, idx) => idx !== i))
+                  }
+                  disabled={rows.length === 1}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"
+                  aria-label="Quitar servicio"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setRows((r) => [...r, { id: nextRowId++ }])}
+            className="mt-1 flex items-center gap-1.5 self-start text-sm text-primary hover:underline"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Añadir servicio
+          </button>
+          <FieldDescription>Opcional, pero nos ayuda a activarte más rápido.</FieldDescription>
         </Field>
 
         <Field>

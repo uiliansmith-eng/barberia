@@ -227,6 +227,7 @@ export type Database = {
       }
       directory_leads: {
         Row: {
+          address: string | null
           business_name: string
           city: string | null
           contact_name: string
@@ -235,10 +236,12 @@ export type Database = {
           id: string
           notes: string | null
           phone: string
+          services: Json
           source: string
           status: string
         }
         Insert: {
+          address?: string | null
           business_name: string
           city?: string | null
           contact_name: string
@@ -247,10 +250,12 @@ export type Database = {
           id?: string
           notes?: string | null
           phone: string
+          services?: Json
           source?: string
           status?: string
         }
         Update: {
+          address?: string | null
           business_name?: string
           city?: string | null
           contact_name?: string
@@ -259,6 +264,7 @@ export type Database = {
           id?: string
           notes?: string | null
           phone?: string
+          services?: Json
           source?: string
           status?: string
         }
