@@ -581,6 +581,10 @@ export type Database = {
         Returns: Json
       }
       public_list_tenants: { Args: { p_query?: string }; Returns: Json }
+      tenant_has_booking_capacity: {
+        Args: { p_tenant_id: string }
+        Returns: boolean
+      }
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {

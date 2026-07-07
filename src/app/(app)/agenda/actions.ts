@@ -50,6 +50,17 @@ export async function createAppointment(
   const { supabase, tenantId, locationId } = await getTenantId();
   if (!tenantId) return { error: "No se encontró tu barbería" };
 
+  const { data: hasCapacity } = await supabase.rpc(
+    "tenant_has_booking_capacity",
+    { p_tenant_id: tenantId }
+  );
+  if (!hasCapacity) {
+    return {
+      error:
+        "Has alcanzado el límite de 50 citas este mes en el plan gratis. Actualiza tu plan para seguir creando citas.",
+    };
+  }
+
   const { data: service } = await supabase
     .from("services")
     .select("duration_minutes, price")

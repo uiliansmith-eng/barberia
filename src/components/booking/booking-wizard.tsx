@@ -115,7 +115,9 @@ export function BookingWizard({
       setError(
         rpcError.message.includes("slot_unavailable")
           ? "Ese horario ya no está disponible. Elige otro."
-          : "No se pudo confirmar la reserva. Inténtalo de nuevo."
+          : rpcError.message.includes("booking_limit_reached")
+            ? "Esta barbería alcanzó su límite de reservas online este mes. Llama directamente para reservar."
+            : "No se pudo confirmar la reserva. Inténtalo de nuevo."
       );
       return;
     }
