@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { format } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Award,
@@ -13,6 +13,7 @@ import {
   Medal,
   Scissors,
   Search,
+  Star,
   Trophy,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -71,9 +72,43 @@ const TABS = [
   { id: "book", label: "Reservar", icon: Scissors },
   { id: "appointments", label: "Mis citas", icon: CalendarDays },
   { id: "points", label: "Puntos", icon: Award },
+  { id: "reviews", label: "Reseñas", icon: Star },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
+
+type Review = {
+  customer_name: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+};
+
+type ReviewsData = { average: number; count: number; reviews: Review[] };
+
+function StarRow({
+  rating,
+  size = "h-4 w-4",
+}: {
+  rating: number;
+  size?: string;
+}) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={cn(
+            size,
+            n <= Math.round(rating)
+              ? "fill-primary text-primary"
+              : "text-muted-foreground/30"
+          )}
+        />
+      ))}
+    </div>
+  );
+}
 
 const QUICK_MESSAGES = [
   { id: "late", label: "Llegaré 10 min tarde", icon: Clock3, message: "Llegaré 10 minutos tarde a mi cita." },
@@ -162,6 +197,90 @@ function AppointmentActions({
   );
 }
 
+function LeaveReview({
+  tenantId,
+  phone,
+}: {
+  tenantId: string;
+  phone: string;
+}) {
+  const supabase = useMemo(() => createClient(), []);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (rating === 0) return;
+    setSubmitting(true);
+    setError(null);
+    const { error: rpcError } = await supabase.rpc("public_submit_review", {
+      p_tenant_id: tenantId,
+      p_phone: phone,
+      p_rating: rating,
+      p_comment: comment.trim(),
+    });
+    setSubmitting(false);
+    if (rpcError) {
+      setError("No se pudo enviar tu reseña. Inténtalo de nuevo.");
+      return;
+    }
+    setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <div className="glass flex items-center gap-2 rounded-2xl p-4 text-sm text-muted-foreground">
+        <Check className="h-4 w-4 text-primary" />
+        ¡Gracias por tu reseña!
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass rounded-2xl p-4">
+      <h3 className="text-sm font-semibold">Deja tu reseña</h3>
+      <div className="mt-2 flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onMouseEnter={() => setHoverRating(n)}
+            onMouseLeave={() => setHoverRating(0)}
+            onClick={() => setRating(n)}
+          >
+            <Star
+              className={cn(
+                "h-7 w-7",
+                n <= (hoverRating || rating)
+                  ? "fill-primary text-primary"
+                  : "text-muted-foreground/30"
+              )}
+            />
+          </button>
+        ))}
+      </div>
+      <Input
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Cuéntanos qué tal tu experiencia (opcional)"
+        className="mt-3"
+      />
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      <Button
+        size="sm"
+        className="mt-3"
+        disabled={rating === 0 || submitting}
+        onClick={submit}
+      >
+        {submitting ? "Enviando..." : "Enviar reseña"}
+      </Button>
+    </div>
+  );
+}
+
 export function BookingPortal({
   tenant,
   services,
@@ -177,6 +296,18 @@ export function BookingPortal({
   const [phone, setPhone] = useState("");
   const [searching, setSearching] = useState(false);
   const [result, setResult] = useState<LookupResult | null>(null);
+
+  const [reviewsData, setReviewsData] = useState<ReviewsData | null>(null);
+  const loadingReviews = tab === "reviews" && !reviewsData;
+
+  useEffect(() => {
+    if (tab !== "reviews" || reviewsData) return;
+    supabase
+      .rpc("public_get_reviews", { p_tenant_id: tenant.id })
+      .then(({ data }) => {
+        setReviewsData(data as unknown as ReviewsData);
+      });
+  }, [tab, reviewsData, supabase, tenant.id]);
 
   async function handleLookup() {
     if (!phone.trim()) return;
@@ -310,6 +441,17 @@ export function BookingPortal({
             );
           })()}
 
+          {result &&
+            result.found &&
+            tab === "appointments" &&
+            result.appointments.some((a) => a.status === "completed") && (
+              <LeaveReview
+                key={phone.trim()}
+                tenantId={tenant.id}
+                phone={phone.trim()}
+              />
+            )}
+
           {result && result.found && tab === "appointments" && (
             <div className="flex flex-col gap-3">
               {result.appointments.length === 0 && (
@@ -354,6 +496,57 @@ export function BookingPortal({
                 );
               })}
             </div>
+          )}
+        </div>
+      )}
+
+      {tab === "reviews" && (
+        <div className="flex flex-col gap-4">
+          {loadingReviews && (
+            <p className="text-sm text-muted-foreground">Cargando reseñas...</p>
+          )}
+
+          {reviewsData && (
+            <>
+              <div className="glass-strong flex items-center gap-4 rounded-2xl p-5">
+                <p className="text-3xl font-semibold">{reviewsData.average || "—"}</p>
+                <div>
+                  <StarRow rating={reviewsData.average} size="h-5 w-5" />
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {reviewsData.count}{" "}
+                    {reviewsData.count === 1 ? "reseña" : "reseñas"}
+                  </p>
+                </div>
+              </div>
+
+              {reviewsData.reviews.length === 0 ? (
+                <p className="glass rounded-2xl p-4 text-sm text-muted-foreground">
+                  Todavía no hay reseñas para {tenant.name}.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {reviewsData.reviews.map((r, i) => (
+                    <div key={i} className="glass rounded-2xl p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium">{r.customer_name}</p>
+                        <StarRow rating={r.rating} />
+                      </div>
+                      {r.comment && (
+                        <p className="mt-2 text-sm text-foreground/85">
+                          {r.comment}
+                        </p>
+                      )}
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(r.created_at), {
+                          addSuffix: true,
+                          locale: es,
+                        })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

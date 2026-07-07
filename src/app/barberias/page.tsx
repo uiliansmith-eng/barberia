@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MapPin, Scissors, Search, UserSquare2 } from "lucide-react";
+import { MapPin, Scissors, Search, Star, UserSquare2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ type TenantResult = {
   address: string | null;
   services_count: number;
   barbers_count: number;
+  avg_rating: number | null;
+  reviews_count: number;
 };
 
 export default async function BarberiasPage({
@@ -83,7 +85,18 @@ export default async function BarberiasPage({
                   <Scissors className="h-6 w-6" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold">{t.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{t.name}</p>
+                    {t.reviews_count > 0 && (
+                      <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                        <Star className="h-3.5 w-3.5 fill-primary text-primary" />
+                        {t.avg_rating}
+                        <span className="text-muted-foreground">
+                          ({t.reviews_count})
+                        </span>
+                      </span>
+                    )}
+                  </div>
                   {t.address && (
                     <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
                       <MapPin className="h-3.5 w-3.5 shrink-0" />

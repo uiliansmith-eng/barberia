@@ -371,6 +371,54 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          customer_name: string
+          id: string
+          rating: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          customer_name: string
+          id?: string
+          rating: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          customer_name?: string
+          id?: string
+          rating?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedules: {
         Row: {
           barber_id: string
@@ -598,7 +646,17 @@ export type Database = {
         Args: { p_phone: string; p_tenant_id: string }
         Returns: Json
       }
+      public_get_reviews: { Args: { p_tenant_id: string }; Returns: Json }
       public_list_tenants: { Args: { p_query?: string }; Returns: Json }
+      public_submit_review: {
+        Args: {
+          p_comment: string
+          p_phone: string
+          p_rating: number
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       tenant_has_booking_capacity: {
         Args: { p_tenant_id: string }
         Returns: boolean
