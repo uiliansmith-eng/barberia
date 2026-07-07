@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const plans = [
   {
     name: "Pro",
-    price: "29€",
+    price: "14,99€",
     period: "/mes",
     description: "Para barberías con una sola sucursal.",
     features: [
@@ -22,7 +22,7 @@ const plans = [
   },
   {
     name: "Business",
-    price: "59€",
+    price: "29,99€",
     period: "/mes",
     description: "Para barberías con varias sucursales o equipos grandes.",
     features: [
