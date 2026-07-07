@@ -7,6 +7,19 @@ import { cn } from "@/lib/utils";
 
 const plans = [
   {
+    name: "Gratis",
+    price: "0€",
+    period: "/siempre",
+    description: "El sistema de reservas online, sin coste.",
+    features: [
+      "Reservas online ilimitadas",
+      "Hasta 50 citas al mes",
+      "Listado en el directorio de BarberOS",
+      "Agenda y clientes",
+    ],
+    highlighted: false,
+  },
+  {
     name: "Pro",
     price: "14,99€",
     period: "/mes",
@@ -45,12 +58,12 @@ export function Pricing() {
             Precios simples, sin sorpresas
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            14 días de prueba gratis en cualquier plan. Cancela cuando
-            quieras.
+            El sistema de reservas online es gratis hasta 50 citas al mes.
+            Sin tarjeta, sin permanencia.
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2">
+        <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3">
           {plans.map((plan) => (
             <Card
               key={plan.name}
