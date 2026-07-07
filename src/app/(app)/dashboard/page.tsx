@@ -12,9 +12,10 @@ import {
   UserSquare2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getDashboardKpis, getExecutiveKpis } from "./queries";
+import { getDashboardKpis, getExecutiveKpis, getBookingUsage } from "./queries";
 import { BookingLinkCard } from "@/components/dashboard/booking-link-card";
 import { AppointmentsRealtimeRefresher } from "@/components/agenda/realtime-refresher";
+import { BookingUsageBanner } from "@/components/dashboard/booking-usage-banner";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -36,9 +37,10 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
-  const [kpis, exec] = await Promise.all([
+  const [kpis, exec, usage] = await Promise.all([
     getDashboardKpis(profile.tenant_id, supabase),
     getExecutiveKpis(profile.tenant_id, supabase),
+    getBookingUsage(profile.tenant_id, supabase),
   ]);
 
   const cards = [
@@ -98,6 +100,12 @@ export default async function DashboardPage() {
       </div>
 
       {profile?.tenants?.slug && <BookingLinkCard slug={profile.tenants.slug} />}
+
+      <BookingUsageBanner
+        used={usage.used}
+        limit={usage.limit}
+        isPaid={usage.isPaid}
+      />
 
       <div>
         <h2 className="text-lg font-semibold text-foreground">Hoy</h2>

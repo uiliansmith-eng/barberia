@@ -81,6 +81,41 @@ export async function getDashboardKpis(
   };
 }
 
+const FREE_PLAN_BOOKING_LIMIT = 50;
+
+export async function getBookingUsage(
+  tenantId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>
+) {
+  const now = new Date();
+  const monthStartIso = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
+  ).toISOString();
+
+  const [{ data: subscription }, { count }] = await Promise.all([
+    supabase
+      .from("subscriptions")
+      .select("plan, status")
+      .eq("tenant_id", tenantId)
+      .maybeSingle(),
+    supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .gte("created_at", monthStartIso),
+  ]);
+
+  const isPaid =
+    subscription?.status === "active" &&
+    (subscription.plan === "pro" || subscription.plan === "business");
+
+  return {
+    isPaid,
+    used: count ?? 0,
+    limit: FREE_PLAN_BOOKING_LIMIT,
+  };
+}
+
 export async function getExecutiveKpis(
   tenantId: string,
   supabase: Awaited<ReturnType<typeof createClient>>
