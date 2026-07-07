@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { directoryLeadSchema } from "@/lib/validations/directory-lead";
 import { sendReminderEmail } from "@/lib/reminders/email";
+import { escapeHtml } from "@/lib/escape-html";
 
 export type DirectoryLeadActionState = {
   error?: string;
@@ -10,13 +11,6 @@ export type DirectoryLeadActionState = {
 } | null;
 
 const NOTIFY_EMAIL = "info@appstles.com";
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
 
 export async function submitDirectoryLead(
   _prevState: DirectoryLeadActionState,

@@ -14,6 +14,7 @@ import {
   User,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { createPublicBooking } from "@/app/reservar/[slug]/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -97,33 +98,35 @@ export function BookingWizard({
     setSubmitting(true);
     setError(null);
 
-    const { data, error: rpcError } = await supabase.rpc("public_create_booking", {
-      p_tenant_id: tenant.id,
-      p_barber_id: barber.id,
-      p_service_id: service.id,
-      p_date: format(date, "yyyy-MM-dd"),
-      p_time: time,
-      p_customer_name: name,
-      p_customer_phone: phone,
-      p_customer_email: email,
-      p_notes: notes,
+    const result = await createPublicBooking({
+      tenantId: tenant.id,
+      barberId: barber.id,
+      serviceId: service.id,
+      date: format(date, "yyyy-MM-dd"),
+      time,
+      customerName: name,
+      customerPhone: phone,
+      customerEmail: email,
+      notes,
     });
 
     setSubmitting(false);
 
-    if (rpcError) {
+    if ("error" in result) {
       setError(
-        rpcError.message.includes("slot_unavailable")
+        result.error.includes("slot_unavailable")
           ? "Ese horario ya no está disponible. Elige otro."
-          : rpcError.message.includes("booking_limit_reached")
+          : result.error.includes("booking_limit_reached")
             ? "Esta barbería alcanzó su límite de reservas online este mes. Llama directamente para reservar."
             : "No se pudo confirmar la reserva. Inténtalo de nuevo."
       );
       return;
     }
 
-    const result = data as { starts_at: string; service_name: string };
-    setConfirmation({ startsAt: result.starts_at, serviceName: result.service_name });
+    setConfirmation({
+      startsAt: result.data.starts_at,
+      serviceName: result.data.service_name,
+    });
     setStep(3);
   }
 
