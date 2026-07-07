@@ -6,6 +6,15 @@ import type { Enums } from "@/lib/supabase/database.types";
 
 type SubscriptionStatus = Enums<"subscription_status">;
 
+const SUBSCRIPTION_STATUS_MAP: Record<string, SubscriptionStatus> = {
+  active: "active",
+  trialing: "trialing",
+  past_due: "past_due",
+  canceled: "canceled",
+  unpaid: "past_due",
+  incomplete_expired: "canceled",
+};
+
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -32,20 +41,29 @@ export async function POST(request: NextRequest) {
     if (session.mode === "subscription") {
       const tenantId = session.metadata?.tenant_id;
       const plan = session.metadata?.plan;
-      if (tenantId && (plan === "pro" || plan === "business")) {
+      const subscriptionId =
+        typeof session.subscription === "string"
+          ? session.subscription
+          : (session.subscription?.id ?? null);
+
+      if (tenantId && (plan === "pro" || plan === "business") && subscriptionId) {
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const status = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? "active";
+        const periodEnd = subscription.items.data[0]?.current_period_end;
+
         await admin.from("subscriptions").upsert(
           {
             tenant_id: tenantId,
             plan,
-            status: "active",
+            status,
+            current_period_end: periodEnd
+              ? new Date(periodEnd * 1000).toISOString()
+              : null,
             stripe_customer_id:
               typeof session.customer === "string"
                 ? session.customer
                 : (session.customer?.id ?? null),
-            stripe_subscription_id:
-              typeof session.subscription === "string"
-                ? session.subscription
-                : (session.subscription?.id ?? null),
+            stripe_subscription_id: subscriptionId,
           },
           { onConflict: "tenant_id" }
         );
@@ -75,15 +93,7 @@ export async function POST(request: NextRequest) {
     const tenantId = subscription.metadata?.tenant_id;
 
     if (tenantId) {
-      const statusMap: Record<string, SubscriptionStatus> = {
-        active: "active",
-        trialing: "trialing",
-        past_due: "past_due",
-        canceled: "canceled",
-        unpaid: "past_due",
-        incomplete_expired: "canceled",
-      };
-      const status = statusMap[subscription.status] ?? "canceled";
+      const status = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? "canceled";
       const periodEnd = subscription.items.data[0]?.current_period_end;
 
       await admin

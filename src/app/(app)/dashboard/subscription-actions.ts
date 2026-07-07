@@ -44,7 +44,10 @@ export async function createSubscriptionCheckout(
     customer_email: ctx.email,
     client_reference_id: ctx.tenantId,
     metadata: { tenant_id: ctx.tenantId, plan },
-    subscription_data: { metadata: { tenant_id: ctx.tenantId, plan } },
+    subscription_data: {
+      trial_period_days: 14,
+      metadata: { tenant_id: ctx.tenantId, plan },
+    },
     success_url: `${siteUrl}/dashboard?subscription=success`,
     cancel_url: `${siteUrl}/dashboard?subscription=cancelled`,
   });

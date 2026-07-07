@@ -106,7 +106,7 @@ export async function getBookingUsage(
   ]);
 
   const isPaid =
-    subscription?.status === "active" &&
+    (subscription?.status === "active" || subscription?.status === "trialing") &&
     (subscription.plan === "pro" || subscription.plan === "business");
 
   return {

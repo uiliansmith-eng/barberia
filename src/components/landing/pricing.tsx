@@ -17,6 +17,7 @@ const plans = [
       "Listado en el directorio de BarberOS",
       "Agenda y clientes",
     ],
+    cta: "Empieza gratis",
     highlighted: false,
   },
   {
@@ -24,6 +25,7 @@ const plans = [
     price: "14,99€",
     period: "/mes",
     description: "Para barberías con una sola sucursal.",
+    trialNote: "14 días gratis, luego 14,99€/mes",
     features: [
       "1 sucursal",
       "Hasta 5 barberos",
@@ -31,6 +33,7 @@ const plans = [
       "Recordatorios por email",
       "Dashboard con KPIs",
     ],
+    cta: "Prueba 14 días gratis",
     highlighted: false,
   },
   {
@@ -38,6 +41,7 @@ const plans = [
     price: "29,99€",
     period: "/mes",
     description: "Para barberías con varias sucursales o equipos grandes.",
+    trialNote: "14 días gratis, luego 29,99€/mes",
     features: [
       "Sucursales ilimitadas",
       "Barberos ilimitados",
@@ -47,6 +51,7 @@ const plans = [
       "Rendimiento por barbero",
       "Soporte prioritario",
     ],
+    cta: "Prueba 14 días gratis",
     highlighted: true,
   },
 ];
@@ -93,6 +98,11 @@ export function Pricing() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   {plan.description}
                 </p>
+                {plan.trialNote && (
+                  <p className="mt-1 text-xs font-medium text-primary">
+                    {plan.trialNote}
+                  </p>
+                )}
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
@@ -109,7 +119,7 @@ export function Pricing() {
                   nativeButton={false}
                   render={<Link href="/registro" />}
                 >
-                  Empieza gratis
+                  {plan.cta}
                 </Button>
               </CardContent>
             </Card>
