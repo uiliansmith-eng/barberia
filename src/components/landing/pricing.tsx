@@ -55,7 +55,7 @@ export function Pricing() {
             <Card
               key={plan.name}
               className={cn(
-                "relative border-border bg-card shadow-none",
+                "relative border-border bg-card shadow-lg shadow-black/20",
                 plan.highlighted &&
                   "border-primary/40 shadow-xl shadow-primary/10 ring-1 ring-primary/10"
               )}
