@@ -18,7 +18,7 @@ export async function sendReminderEmail(params: {
   html: string;
 }): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL ?? "BarberOS <recordatorios@barberos.ai>";
+  const from = process.env.RESEND_FROM_EMAIL ?? "BarberOS <recordatorios@appstles.com>";
 
   if (!apiKey) {
     console.log(
