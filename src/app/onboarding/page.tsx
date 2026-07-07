@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function OnboardingPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
+    <div className="dark bg-mesh-dark bg-background text-foreground flex min-h-screen flex-col items-center justify-center px-6 py-12">
       <div className="mb-8 flex items-center gap-2 font-semibold tracking-tight text-foreground">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Scissors className="h-4 w-4" />

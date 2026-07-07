@@ -8,7 +8,7 @@ import { Footer } from "@/components/landing/footer";
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="dark bg-mesh-dark bg-background text-foreground flex flex-1 flex-col">
       <Navbar />
       <main className="flex-1">
         <Hero />
