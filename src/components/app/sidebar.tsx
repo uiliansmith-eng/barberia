@@ -25,7 +25,10 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="dark bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-40 flex w-60 shrink-0 flex-col border-r border-sidebar-border px-4 py-6">
+    <aside
+      className="dark text-sidebar-foreground fixed inset-y-0 left-0 z-40 flex w-60 shrink-0 flex-col border-r border-sidebar-border px-4 py-6 backdrop-blur-2xl backdrop-saturate-150"
+      style={{ backgroundColor: "color-mix(in oklch, var(--sidebar) 55%, transparent)" }}
+    >
       <Link
         href="/dashboard"
         className="mb-8 flex items-center gap-2 px-2 font-semibold tracking-tight"
