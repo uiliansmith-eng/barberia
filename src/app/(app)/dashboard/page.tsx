@@ -17,6 +17,7 @@ import { BookingLinkCard } from "@/components/dashboard/booking-link-card";
 import { AppointmentsRealtimeRefresher } from "@/components/agenda/realtime-refresher";
 import { BookingUsageBanner } from "@/components/dashboard/booking-usage-banner";
 import { StripeConnectCard } from "@/components/dashboard/stripe-connect-card";
+import { PlanCard } from "@/components/dashboard/plan-card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -40,10 +41,15 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
-  const [kpis, exec, usage] = await Promise.all([
+  const [kpis, exec, usage, { data: subscription }] = await Promise.all([
     getDashboardKpis(profile.tenant_id, supabase),
     getExecutiveKpis(profile.tenant_id, supabase),
     getBookingUsage(profile.tenant_id, supabase),
+    supabase
+      .from("subscriptions")
+      .select("plan, status")
+      .eq("tenant_id", profile.tenant_id)
+      .maybeSingle(),
   ]);
 
   const cards = [
@@ -105,10 +111,16 @@ export default async function DashboardPage() {
       {profile?.tenants?.slug && <BookingLinkCard slug={profile.tenants.slug} />}
 
       {profile?.role === "owner" && profile.tenants && (
-        <StripeConnectCard
-          chargesEnabled={profile.tenants.stripe_charges_enabled}
-          requireOnlinePayment={profile.tenants.require_online_payment}
-        />
+        <>
+          <PlanCard
+            plan={subscription?.plan ?? null}
+            status={subscription?.status ?? null}
+          />
+          <StripeConnectCard
+            chargesEnabled={profile.tenants.stripe_charges_enabled}
+            requireOnlinePayment={profile.tenants.require_online_payment}
+          />
+        </>
       )}
 
       <BookingUsageBanner

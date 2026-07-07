@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripeClient } from "@/lib/stripe/client";
 import type Stripe from "stripe";
+import type { Enums } from "@/lib/supabase/database.types";
+
+type SubscriptionStatus = Enums<"subscription_status">;
 
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
@@ -25,19 +28,73 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const appointmentId = session.metadata?.appointment_id;
 
-    if (appointmentId) {
+    if (session.mode === "subscription") {
+      const tenantId = session.metadata?.tenant_id;
+      const plan = session.metadata?.plan;
+      if (tenantId && (plan === "pro" || plan === "business")) {
+        await admin.from("subscriptions").upsert(
+          {
+            tenant_id: tenantId,
+            plan,
+            status: "active",
+            stripe_customer_id:
+              typeof session.customer === "string"
+                ? session.customer
+                : (session.customer?.id ?? null),
+            stripe_subscription_id:
+              typeof session.subscription === "string"
+                ? session.subscription
+                : (session.subscription?.id ?? null),
+          },
+          { onConflict: "tenant_id" }
+        );
+      }
+    } else {
+      const appointmentId = session.metadata?.appointment_id;
+      if (appointmentId) {
+        await admin
+          .from("appointments")
+          .update({
+            payment_status: "paid",
+            stripe_payment_intent_id:
+              typeof session.payment_intent === "string"
+                ? session.payment_intent
+                : (session.payment_intent?.id ?? null),
+          })
+          .eq("id", appointmentId);
+      }
+    }
+  }
+
+  if (
+    event.type === "customer.subscription.updated" ||
+    event.type === "customer.subscription.deleted"
+  ) {
+    const subscription = event.data.object as Stripe.Subscription;
+    const tenantId = subscription.metadata?.tenant_id;
+
+    if (tenantId) {
+      const statusMap: Record<string, SubscriptionStatus> = {
+        active: "active",
+        trialing: "trialing",
+        past_due: "past_due",
+        canceled: "canceled",
+        unpaid: "past_due",
+        incomplete_expired: "canceled",
+      };
+      const status = statusMap[subscription.status] ?? "canceled";
+      const periodEnd = subscription.items.data[0]?.current_period_end;
+
       await admin
-        .from("appointments")
+        .from("subscriptions")
         .update({
-          payment_status: "paid",
-          stripe_payment_intent_id:
-            typeof session.payment_intent === "string"
-              ? session.payment_intent
-              : (session.payment_intent?.id ?? null),
+          status,
+          current_period_end: periodEnd
+            ? new Date(periodEnd * 1000).toISOString()
+            : null,
         })
-        .eq("id", appointmentId);
+        .eq("tenant_id", tenantId);
     }
   }
 
