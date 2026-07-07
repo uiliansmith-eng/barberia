@@ -16,6 +16,7 @@ import { getDashboardKpis, getExecutiveKpis, getBookingUsage } from "./queries";
 import { BookingLinkCard } from "@/components/dashboard/booking-link-card";
 import { AppointmentsRealtimeRefresher } from "@/components/agenda/realtime-refresher";
 import { BookingUsageBanner } from "@/components/dashboard/booking-usage-banner";
+import { StripeConnectCard } from "@/components/dashboard/stripe-connect-card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -29,7 +30,9 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, tenant_id, tenants(name, slug)")
+    .select(
+      "full_name, role, tenant_id, tenants(name, slug, stripe_charges_enabled, require_online_payment)"
+    )
     .eq("id", user.id)
     .single();
 
@@ -100,6 +103,13 @@ export default async function DashboardPage() {
       </div>
 
       {profile?.tenants?.slug && <BookingLinkCard slug={profile.tenants.slug} />}
+
+      {profile?.role === "owner" && profile.tenants && (
+        <StripeConnectCard
+          chargesEnabled={profile.tenants.stripe_charges_enabled}
+          requireOnlinePayment={profile.tenants.require_online_payment}
+        />
+      )}
 
       <BookingUsageBanner
         used={usage.used}

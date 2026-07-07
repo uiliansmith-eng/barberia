@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { addDays, format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -12,6 +13,7 @@ import {
   Scissors,
   Sparkles,
   User,
+  XCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { createPublicBooking } from "@/app/reservar/[slug]/actions";
@@ -52,8 +54,10 @@ export function BookingWizard({
   noHeader?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
+  const searchParams = useSearchParams();
+  const paymentStatus = searchParams.get("payment");
 
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(paymentStatus === "success" ? 3 : 0);
   const [service, setService] = useState<Service | null>(null);
   const [barber, setBarber] = useState<Barber | null>(null);
   const [date, setDate] = useState(nextDays()[0]);
@@ -71,7 +75,14 @@ export function BookingWizard({
   const [confirmation, setConfirmation] = useState<{
     startsAt: string;
     serviceName: string;
-  } | null>(null);
+    paid?: boolean;
+  } | null>(() => {
+    if (paymentStatus !== "success") return null;
+    const startsAt = searchParams.get("starts_at");
+    const serviceName = searchParams.get("service_name");
+    if (!startsAt || !serviceName) return null;
+    return { startsAt, serviceName, paid: true };
+  });
 
   const dateKey = format(date, "yyyy-MM-dd");
   const currentSlotsKey = barber && service ? `${barber.id}|${dateKey}|${service.id}` : null;
@@ -100,6 +111,7 @@ export function BookingWizard({
 
     const result = await createPublicBooking({
       tenantId: tenant.id,
+      tenantSlug: tenant.slug,
       barberId: barber.id,
       serviceId: service.id,
       date: format(date, "yyyy-MM-dd"),
@@ -110,9 +122,8 @@ export function BookingWizard({
       notes,
     });
 
-    setSubmitting(false);
-
     if ("error" in result) {
+      setSubmitting(false);
       setError(
         result.error.includes("slot_unavailable")
           ? "Ese horario ya no está disponible. Elige otro."
@@ -123,6 +134,12 @@ export function BookingWizard({
       return;
     }
 
+    if (result.checkoutUrl) {
+      window.location.href = result.checkoutUrl;
+      return;
+    }
+
+    setSubmitting(false);
     setConfirmation({
       startsAt: result.data.starts_at,
       serviceName: result.data.service_name,
@@ -399,6 +416,24 @@ export function BookingWizard({
             {format(toWallClockDate(confirmation.startsAt), "EEEE d 'de' MMMM 'a las' HH:mm", {
               locale: es,
             })}
+          </p>
+          {confirmation.paid && (
+            <span className="mt-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              Pago confirmado
+            </span>
+          )}
+        </div>
+      )}
+
+      {step !== 3 && paymentStatus === "cancelled" && (
+        <div className="glass flex flex-col items-center gap-2 rounded-2xl p-8 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <XCircle className="h-6 w-6" />
+          </span>
+          <h1 className="text-lg font-semibold">Pago no completado</h1>
+          <p className="text-sm text-muted-foreground">
+            Tu cita quedó guardada, pero el pago no se completó. Contacta con
+            la barbería para confirmarla.
           </p>
         </div>
       )}

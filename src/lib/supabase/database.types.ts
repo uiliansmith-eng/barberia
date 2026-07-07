@@ -23,12 +23,15 @@ export type Database = {
           id: string
           location_id: string | null
           notes: string | null
+          payment_status: string
           price: number
           reminder_24h_sent_at: string | null
           reminder_2h_sent_at: string | null
           service_id: string
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
           tenant_id: string
           updated_at: string
         }
@@ -40,12 +43,15 @@ export type Database = {
           id?: string
           location_id?: string | null
           notes?: string | null
+          payment_status?: string
           price?: number
           reminder_24h_sent_at?: string | null
           reminder_2h_sent_at?: string | null
           service_id: string
           starts_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -57,12 +63,15 @@ export type Database = {
           id?: string
           location_id?: string | null
           notes?: string | null
+          payment_status?: string
           price?: number
           reminder_24h_sent_at?: string | null
           reminder_2h_sent_at?: string | null
           service_id?: string
           starts_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           tenant_id?: string
           updated_at?: string
         }
@@ -501,7 +510,10 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          require_online_payment: boolean
           slug: string
+          stripe_account_id: string | null
+          stripe_charges_enabled: boolean
           timezone: string
           updated_at: string
         }
@@ -510,7 +522,10 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          require_online_payment?: boolean
           slug: string
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
           timezone?: string
           updated_at?: string
         }
@@ -519,7 +534,10 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          require_online_payment?: boolean
           slug?: string
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
           timezone?: string
           updated_at?: string
         }

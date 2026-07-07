@@ -12,7 +12,7 @@ const plans = [
     period: "/siempre",
     description: "El sistema de reservas online, sin coste.",
     features: [
-      "Reservas online ilimitadas",
+      "Reservas online",
       "Hasta 50 citas al mes",
       "Listado en el directorio de BarberOS",
       "Agenda y clientes",
@@ -42,6 +42,8 @@ const plans = [
       "Sucursales ilimitadas",
       "Barberos ilimitados",
       "Recordatorios por email y WhatsApp",
+      "Dashboard con KPIs y analíticas",
+      "Pagos online al reservar",
       "Rendimiento por barbero",
       "Soporte prioritario",
     ],

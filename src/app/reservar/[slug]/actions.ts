@@ -5,11 +5,13 @@ import { es } from "date-fns/locale";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendReminderEmail } from "@/lib/reminders/email";
+import { getStripeClient } from "@/lib/stripe/client";
 import { toWallClockDate } from "@/lib/time";
 import { escapeHtml } from "@/lib/escape-html";
 
 type CreateBookingInput = {
   tenantId: string;
+  tenantSlug: string;
   barberId: string;
   serviceId: string;
   date: string;
@@ -30,7 +32,7 @@ type BookingResult = {
 
 export type CreateBookingActionResult =
   | { error: string }
-  | { data: BookingResult };
+  | { data: BookingResult; checkoutUrl?: string };
 
 export async function createPublicBooking(
   input: CreateBookingInput
@@ -60,7 +62,68 @@ export async function createPublicBooking(
     // The booking already succeeded — a failed notification shouldn't fail it.
   }
 
-  return { data: result };
+  let checkoutUrl: string | undefined;
+  try {
+    checkoutUrl = await createCheckoutSessionIfRequired(input, result);
+  } catch {
+    // Payment setup failing shouldn't undo an already-created booking.
+  }
+
+  return { data: result, checkoutUrl };
+}
+
+async function createCheckoutSessionIfRequired(
+  input: CreateBookingInput,
+  booking: BookingResult
+): Promise<string | undefined> {
+  const admin = createAdminClient();
+  const { data: tenant } = await admin
+    .from("tenants")
+    .select("stripe_account_id, stripe_charges_enabled, require_online_payment")
+    .eq("id", input.tenantId)
+    .single();
+
+  if (
+    !tenant?.require_online_payment ||
+    !tenant.stripe_charges_enabled ||
+    !tenant.stripe_account_id
+  ) {
+    return undefined;
+  }
+
+  const stripe = getStripeClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const bookingPath = `${siteUrl}/reservar/${input.tenantSlug}`;
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    line_items: [
+      {
+        price_data: {
+          currency: "eur",
+          product_data: { name: booking.service_name },
+          unit_amount: Math.round(booking.price * 100),
+        },
+        quantity: 1,
+      },
+    ],
+    payment_intent_data: {
+      transfer_data: { destination: tenant.stripe_account_id },
+    },
+    metadata: { appointment_id: booking.appointment_id },
+    success_url: `${bookingPath}?payment=success&starts_at=${encodeURIComponent(booking.starts_at)}&service_name=${encodeURIComponent(booking.service_name)}`,
+    cancel_url: `${bookingPath}?payment=cancelled`,
+    customer_email: input.customerEmail || undefined,
+  });
+
+  if (session.id) {
+    await admin
+      .from("appointments")
+      .update({ payment_status: "unpaid", stripe_checkout_session_id: session.id })
+      .eq("id", booking.appointment_id);
+  }
+
+  return session.url ?? undefined;
 }
 
 async function notifyOwnerOfNewBooking(
