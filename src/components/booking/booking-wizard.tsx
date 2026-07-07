@@ -8,7 +8,9 @@ import {
   CalendarCheck,
   CheckCircle2,
   Clock,
+  Droplet,
   Scissors,
+  Sparkles,
   User,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -27,6 +29,13 @@ const NEXT_DAYS = 14;
 function nextDays() {
   const today = new Date();
   return Array.from({ length: NEXT_DAYS }, (_, i) => addDays(today, i));
+}
+
+function serviceIcon(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes("barba") || n.includes("afeit")) return Sparkles;
+  if (n.includes("tratamiento") || n.includes("hidrat")) return Droplet;
+  return Scissors;
 }
 
 export function BookingWizard({
@@ -114,7 +123,12 @@ export function BookingWizard({
   }
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-6 px-6 py-10">
+    <div
+      className={cn(
+        "mx-auto flex flex-col gap-6 px-6 py-10",
+        step === 0 ? "max-w-2xl" : "max-w-lg"
+      )}
+    >
       <div className="flex items-center gap-2">
         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Scissors className="h-4 w-4" />
@@ -136,33 +150,81 @@ export function BookingWizard({
       )}
 
       {step === 0 && (
-        <div className="flex flex-col gap-3">
-          <h1 className="text-lg font-semibold">Elige un servicio</h1>
-          {services.length === 0 && (
-            <p className="glass rounded-2xl p-4 text-sm text-muted-foreground">
-              Esta barbería todavía no tiene servicios publicados.
+        <div className="flex flex-col gap-8">
+          <div className="glass-strong flex flex-col items-center gap-3 rounded-3xl p-8 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg shadow-primary/20">
+              <Scissors className="h-7 w-7" />
+            </span>
+            <h1 className="text-2xl font-semibold tracking-tight">{tenant.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              Reserva tu cita en segundos, elige el servicio que quieras.
             </p>
-          )}
-          {services.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => {
-                setService(s);
-                setStep(1);
-              }}
-              className="glass flex items-center justify-between rounded-2xl p-4 text-left transition hover:border-primary/40"
-            >
-              <div>
-                <p className="font-medium">{s.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {s.duration_minutes} min
-                </p>
+          </div>
+
+          {barbers.length > 0 && (
+            <div>
+              <h2 className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                Nuestro equipo
+              </h2>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {barbers.map((b) => (
+                  <div
+                    key={b.id}
+                    className="glass flex w-28 shrink-0 flex-col items-center gap-2 rounded-2xl p-4 text-center"
+                  >
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-sm font-bold text-primary-foreground">
+                      {b.full_name.charAt(0).toUpperCase()}
+                    </span>
+                    <p className="w-full truncate text-xs font-medium">{b.full_name}</p>
+                    {b.specialty && (
+                      <p className="w-full truncate text-[11px] text-muted-foreground">
+                        {b.specialty}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
-              <span className="font-semibold text-primary">
-                {Number(s.price).toFixed(2)}€
-              </span>
-            </button>
-          ))}
+            </div>
+          )}
+
+          <div>
+            <h2 className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Servicios y precios
+            </h2>
+            <div className="flex flex-col gap-3">
+              {services.length === 0 && (
+                <p className="glass rounded-2xl p-4 text-sm text-muted-foreground">
+                  Esta barbería todavía no tiene servicios publicados.
+                </p>
+              )}
+              {services.map((s) => {
+                const Icon = serviceIcon(s.name);
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      setService(s);
+                      setStep(1);
+                    }}
+                    className="glass flex items-center gap-4 rounded-2xl p-4 text-left transition hover:border-primary/40"
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">{s.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {s.duration_minutes} min
+                      </p>
+                    </div>
+                    <span className="font-semibold text-primary">
+                      {Number(s.price).toFixed(2)}€
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
