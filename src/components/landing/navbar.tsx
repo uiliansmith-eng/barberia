@@ -33,6 +33,9 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <Link href="/barberias" className="text-sm text-muted-foreground hover:text-foreground">
+            Buscar barbería
+          </Link>
           <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
             Iniciar sesión
           </Link>
@@ -58,6 +61,9 @@ export function Navbar() {
                 {link.label}
               </a>
             ))}
+            <Link href="/barberias" onClick={() => setOpen(false)}>
+              Buscar barbería
+            </Link>
             <Link href="/login" onClick={() => setOpen(false)}>
               Iniciar sesión
             </Link>

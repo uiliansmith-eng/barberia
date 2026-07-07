@@ -535,6 +535,7 @@ export type Database = {
         Args: { p_phone: string; p_tenant_id: string }
         Returns: Json
       }
+      public_list_tenants: { Args: { p_query?: string }; Returns: Json }
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
