@@ -39,17 +39,17 @@ export function Hero() {
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button
             size="lg"
-            className="h-12 px-8 text-base shadow-lg shadow-primary/25"
+            className="group/btn h-12 px-8 text-base shadow-lg shadow-primary/25 transition hover:shadow-xl hover:shadow-primary/30"
             nativeButton={false}
             render={<Link href="/registro" />}
           >
             Empieza gratis 14 días
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
           </Button>
           <Button
             size="lg"
             variant="outline"
-            className="h-12 px-8 text-base"
+            className="h-12 px-8 text-base transition hover:border-primary/40 hover:bg-primary/5"
             nativeButton={false}
             render={<a href="#pricing" />}
           >

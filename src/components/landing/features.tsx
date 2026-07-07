@@ -7,6 +7,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const features = [
   {
@@ -32,6 +33,7 @@ const features = [
     title: "Dashboard con KPIs",
     description:
       "Citas del día, ingresos, clientes recurrentes y servicios más vendidos en tiempo real.",
+    featured: true,
   },
   {
     icon: BellRing,
@@ -65,10 +67,18 @@ export function Features() {
           {features.map((feature) => (
             <Card
               key={feature.title}
-              className="group border-border bg-card shadow-lg shadow-black/20 transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5"
+              className={cn(
+                "group border-border bg-card shadow-lg shadow-black/20 transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5",
+                feature.featured && "border-primary/30 ring-1 ring-primary/15"
+              )}
             >
               <CardHeader>
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+                <div
+                  className={cn(
+                    "flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground",
+                    feature.featured && "bg-primary text-primary-foreground"
+                  )}
+                >
                   <feature.icon className="h-5 w-5" />
                 </div>
                 <CardTitle className="mt-4 text-lg">{feature.title}</CardTitle>
