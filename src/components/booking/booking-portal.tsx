@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { BookingWizard } from "@/components/booking/booking-wizard";
-import { toWallClockDate } from "@/lib/booking/time";
+import { toWallClockDate } from "@/lib/time";
 
 type Service = { id: string; name: string; duration_minutes: number; price: number };
 type Barber = { id: string; full_name: string; specialty: string | null };

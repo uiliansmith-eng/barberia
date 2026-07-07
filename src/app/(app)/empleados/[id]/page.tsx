@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BarberRowActions } from "@/components/employees/barber-row-actions";
 import { ScheduleForm } from "@/components/employees/schedule-form";
+import { toWallClockDate } from "@/lib/time";
 
 export const metadata: Metadata = {
   title: "Barbero — BarberFlow AI",
@@ -171,7 +172,7 @@ export default async function BarberDetailPage({
               >
                 <div>
                   <p className="font-medium text-foreground">
-                    {new Date(a.starts_at).toLocaleString("es-ES", {
+                    {toWallClockDate(a.starts_at).toLocaleString("es-ES", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}

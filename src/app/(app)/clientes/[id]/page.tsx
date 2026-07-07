@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CustomerRowActions } from "@/components/customers/customer-row-actions";
+import { toWallClockDate } from "@/lib/time";
 
 export const metadata: Metadata = {
   title: "Cliente — BarberFlow AI",
@@ -101,7 +102,7 @@ export default async function CustomerDetailPage({
           </p>
           <p className="mt-1 text-lg font-semibold text-foreground">
             {customer.last_visit_at
-              ? new Date(customer.last_visit_at).toLocaleDateString("es-ES")
+              ? toWallClockDate(customer.last_visit_at).toLocaleDateString("es-ES")
               : "—"}
           </p>
         </div>
@@ -155,7 +156,7 @@ export default async function CustomerDetailPage({
               >
                 <div>
                   <p className="font-medium text-foreground">
-                    {new Date(a.starts_at).toLocaleString("es-ES", {
+                    {toWallClockDate(a.starts_at).toLocaleString("es-ES", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}
@@ -199,7 +200,7 @@ export default async function CustomerDetailPage({
                     {p.services?.name}
                   </p>
                   <p className="text-muted-foreground">
-                    {new Date(p.starts_at).toLocaleDateString("es-ES")}
+                    {toWallClockDate(p.starts_at).toLocaleDateString("es-ES")}
                   </p>
                 </div>
                 <span className="font-medium text-foreground">{p.price}€</span>

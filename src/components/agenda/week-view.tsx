@@ -2,6 +2,7 @@ import Link from "next/link";
 import { isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { formatShortDay, toDateKey } from "@/lib/agenda/time";
+import { toWallClockDate } from "@/lib/time";
 import type { AgendaAppointment } from "@/components/agenda/appointment-card";
 
 export function WeekView({
@@ -17,7 +18,7 @@ export function WeekView({
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
       {days.map((day) => {
         const dayAppointments = appointments.filter((a) =>
-          isSameDay(new Date(a.starts_at), day)
+          isSameDay(toWallClockDate(a.starts_at), day)
         );
         const isToday = isSameDay(day, new Date());
         const isSelected = isSameDay(day, selectedDate);
@@ -48,7 +49,7 @@ export function WeekView({
                     key={a.id}
                     className="truncate rounded-md bg-primary/10 px-2 py-1 text-xs text-foreground/85"
                   >
-                    {new Date(a.starts_at).toLocaleTimeString("es-ES", {
+                    {toWallClockDate(a.starts_at).toLocaleTimeString("es-ES", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}{" "}

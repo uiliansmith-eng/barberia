@@ -12,6 +12,7 @@ import {
 } from "@/components/agenda/appointment-sheet";
 import { cancelAppointment } from "@/app/(app)/agenda/actions";
 import { toDateKey } from "@/lib/agenda/time";
+import { toWallClockDate } from "@/lib/time";
 
 export type AgendaAppointment = {
   id: string;
@@ -41,7 +42,7 @@ export function AppointmentCard({
   services: { id: string; label: string; duration: number; price: number }[];
 }) {
   const [editOpen, setEditOpen] = useState(false);
-  const starts = new Date(appointment.starts_at);
+  const starts = toWallClockDate(appointment.starts_at);
 
   const defaults: AppointmentFormDefaults = {
     id: appointment.id,

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Input } from "@/components/ui/input";
 import { NewCustomerButton } from "@/components/customers/new-customer-button";
 import { CustomerRowActions } from "@/components/customers/customer-row-actions";
+import { toWallClockDate } from "@/lib/time";
 
 export const metadata: Metadata = {
   title: "Clientes — BarberFlow AI",
@@ -102,7 +103,7 @@ export default async function CustomersPage({
                   Última visita{" "}
                   <span className="text-foreground">
                     {c.last_visit_at
-                      ? new Date(c.last_visit_at).toLocaleDateString("es-ES")
+                      ? toWallClockDate(c.last_visit_at).toLocaleDateString("es-ES")
                       : "—"}
                   </span>
                   {" · "}
