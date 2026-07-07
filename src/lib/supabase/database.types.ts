@@ -498,6 +498,15 @@ export type Database = {
         }
         Returns: string
       }
+      public_add_appointment_note: {
+        Args: {
+          p_appointment_id: string
+          p_message: string
+          p_phone: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       public_available_slots: {
         Args: {
           p_barber_id: string

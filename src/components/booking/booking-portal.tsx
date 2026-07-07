@@ -3,13 +3,25 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Award, CalendarDays, Crown, Medal, Scissors, Search, Trophy } from "lucide-react";
+import {
+  Award,
+  CalendarDays,
+  Check,
+  Clock3,
+  Crown,
+  MessageCircleQuestion,
+  Medal,
+  Scissors,
+  Search,
+  Trophy,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { BookingWizard } from "@/components/booking/booking-wizard";
+import { toWallClockDate } from "@/lib/booking/time";
 
 type Service = { id: string; name: string; duration_minutes: number; price: number };
 type Barber = { id: string; full_name: string; specialty: string | null };
@@ -62,6 +74,93 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
+
+const QUICK_MESSAGES = [
+  { id: "late", label: "Llegaré 10 min tarde", icon: Clock3, message: "Llegaré 10 minutos tarde a mi cita." },
+  { id: "reschedule", label: "Necesito cambiar cita", icon: CalendarDays, message: "Necesito cambiar mi cita, por favor contáctame." },
+] as const;
+
+function AppointmentActions({
+  appointmentId,
+  tenantId,
+  phone,
+}: {
+  appointmentId: string;
+  tenantId: string;
+  phone: string;
+}) {
+  const supabase = useMemo(() => createClient(), []);
+  const [sending, setSending] = useState<string | null>(null);
+  const [sent, setSent] = useState<Set<string>>(new Set());
+  const [askingQuestion, setAskingQuestion] = useState(false);
+  const [question, setQuestion] = useState("");
+
+  async function sendMessage(id: string, message: string) {
+    setSending(id);
+    const { error } = await supabase.rpc("public_add_appointment_note", {
+      p_appointment_id: appointmentId,
+      p_tenant_id: tenantId,
+      p_phone: phone,
+      p_message: message,
+    });
+    setSending(null);
+    if (!error) {
+      setSent((prev) => new Set(prev).add(id));
+      if (id === "question") {
+        setAskingQuestion(false);
+        setQuestion("");
+      }
+    }
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+      {QUICK_MESSAGES.map((q) => (
+        <Button
+          key={q.id}
+          size="sm"
+          variant="outline"
+          disabled={sending === q.id || sent.has(q.id)}
+          onClick={() => sendMessage(q.id, q.message)}
+        >
+          {sent.has(q.id) ? <Check className="h-3.5 w-3.5" /> : <q.icon className="h-3.5 w-3.5" />}
+          {sent.has(q.id) ? "Enviado" : q.label}
+        </Button>
+      ))}
+
+      {!askingQuestion && !sent.has("question") && (
+        <Button size="sm" variant="outline" onClick={() => setAskingQuestion(true)}>
+          <MessageCircleQuestion className="h-3.5 w-3.5" />
+          Tengo una pregunta
+        </Button>
+      )}
+      {sent.has("question") && (
+        <Button size="sm" variant="outline" disabled>
+          <Check className="h-3.5 w-3.5" />
+          Pregunta enviada
+        </Button>
+      )}
+
+      {askingQuestion && (
+        <div className="flex w-full gap-2">
+          <Input
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Escribe tu pregunta..."
+            className="flex-1"
+          />
+          <Button
+            size="sm"
+            disabled={sending === "question" || !question.trim()}
+            onClick={() => sendMessage("question", question.trim())}
+          >
+            Enviar
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function BookingPortal({
   tenant,
@@ -218,28 +317,42 @@ export function BookingPortal({
                   Todavía no tienes citas.
                 </p>
               )}
-              {result.appointments.map((a) => (
-                <div key={a.id} className="glass flex items-center justify-between rounded-2xl p-4">
-                  <div>
-                    <p className="font-medium">
-                      {format(new Date(a.starts_at), "EEEE d 'de' MMMM 'a las' HH:mm", {
-                        locale: es,
-                      })}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {a.service_name} · {a.barber_name}
-                    </p>
+              {result.appointments.map((a) => {
+                const isUpcoming =
+                  (a.status === "scheduled" || a.status === "confirmed") &&
+                  new Date(a.starts_at) > new Date();
+                return (
+                  <div key={a.id} className="glass rounded-2xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">
+                          {format(toWallClockDate(a.starts_at), "EEEE d 'de' MMMM 'a las' HH:mm", {
+                            locale: es,
+                          })}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {a.service_name} · {a.barber_name}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          {Number(a.price).toFixed(2)}€
+                        </span>
+                        <Badge variant="secondary">
+                          {statusLabels[a.status] ?? a.status}
+                        </Badge>
+                      </div>
+                    </div>
+                    {isUpcoming && (
+                      <AppointmentActions
+                        appointmentId={a.id}
+                        tenantId={tenant.id}
+                        phone={phone.trim()}
+                      />
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {Number(a.price).toFixed(2)}€
-                    </span>
-                    <Badge variant="secondary">
-                      {statusLabels[a.status] ?? a.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

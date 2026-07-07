@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
+import { toWallClockDate } from "@/lib/booking/time";
 
 type Service = { id: string; name: string; duration_minutes: number; price: number };
 type Barber = { id: string; full_name: string; specialty: string | null };
@@ -390,7 +391,7 @@ export function BookingWizard({
             {confirmation.serviceName} · {tenant.name}
           </p>
           <p className="text-sm font-medium">
-            {format(new Date(confirmation.startsAt), "EEEE d 'de' MMMM 'a las' HH:mm", {
+            {format(toWallClockDate(confirmation.startsAt), "EEEE d 'de' MMMM 'a las' HH:mm", {
               locale: es,
             })}
           </p>
