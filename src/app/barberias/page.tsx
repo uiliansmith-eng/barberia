@@ -108,6 +108,13 @@ export default async function BarberiasPage({
             ))
           )}
         </div>
+
+        <p className="text-center text-sm text-muted-foreground">
+          ¿No encuentras tu barbería?{" "}
+          <Link href="/anadir-barberia" className="text-primary hover:underline">
+            Añádela al directorio
+          </Link>
+        </p>
       </div>
     </div>
   );

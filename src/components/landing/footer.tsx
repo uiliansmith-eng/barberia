@@ -8,6 +8,8 @@ const columns = [
       { label: "Funciones", href: "#features" },
       { label: "Precios", href: "#pricing" },
       { label: "Preguntas", href: "#faq" },
+      { label: "Buscar barbería", href: "/barberias" },
+      { label: "Añade tu barbería", href: "/anadir-barberia" },
     ],
   },
   {

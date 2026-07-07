@@ -225,6 +225,45 @@ export type Database = {
           },
         ]
       }
+      directory_leads: {
+        Row: {
+          business_name: string
+          city: string | null
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          notes: string | null
+          phone: string
+          source: string
+          status: string
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          contact_name: string
+          created_at?: string
+          email: string
+          id?: string
+          notes?: string | null
+          phone: string
+          source?: string
+          status?: string
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notes?: string | null
+          phone?: string
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           address: string | null
