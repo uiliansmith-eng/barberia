@@ -14,6 +14,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardKpis, getExecutiveKpis } from "./queries";
 import { BookingLinkCard } from "@/components/dashboard/booking-link-card";
+import { AppointmentsRealtimeRefresher } from "@/components/agenda/realtime-refresher";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -71,6 +72,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-16">
+      <AppointmentsRealtimeRefresher tenantId={profile.tenant_id} />
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Hola{profile?.full_name ? `, ${profile.full_name}` : ""} 👋

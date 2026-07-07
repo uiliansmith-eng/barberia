@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DayView } from "@/components/agenda/day-view";
 import { WeekView } from "@/components/agenda/week-view";
 import { NewAppointmentButton } from "@/components/agenda/new-appointment-button";
+import { AppointmentsRealtimeRefresher } from "@/components/agenda/realtime-refresher";
 import { getAgendaContext, getAgendaFormOptions, getAppointmentsBetween } from "./queries";
 import {
   formatDayLabel,
@@ -71,6 +72,7 @@ export default async function AgendaPage({
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
+      <AppointmentsRealtimeRefresher tenantId={tenantId} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
