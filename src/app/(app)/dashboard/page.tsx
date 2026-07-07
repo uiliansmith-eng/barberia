@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardKpis } from "./queries";
+import { BookingLinkCard } from "@/components/dashboard/booking-link-card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -22,7 +23,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, tenant_id, tenants(name)")
+    .select("full_name, role, tenant_id, tenants(name, slug)")
     .eq("id", user.id)
     .single();
 
@@ -82,6 +83,8 @@ export default async function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {profile?.tenants?.slug && <BookingLinkCard slug={profile.tenants.slug} />}
 
       <div>
         <h2 className="text-lg font-semibold text-foreground">Hoy</h2>

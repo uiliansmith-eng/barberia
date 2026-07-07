@@ -14,6 +14,7 @@ function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.includes(pathname)) return true;
   if (pathname.startsWith("/auth/")) return true;
   if (pathname.startsWith("/legal/")) return true;
+  if (pathname.startsWith("/reservar")) return true;
   // Cron/webhook routes authenticate themselves (e.g. a Bearer secret) —
   // they're never called with a browser session, so skip the login gate.
   if (pathname.startsWith("/api/cron/")) return true;
