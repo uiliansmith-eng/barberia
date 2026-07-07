@@ -3,14 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
 import { NewBarberButton } from "@/components/employees/new-barber-button";
 import { BarberRowActions } from "@/components/employees/barber-row-actions";
 
@@ -53,66 +45,53 @@ export default async function EmployeesPage() {
         <NewBarberButton />
       </div>
 
-      <div className="glass rounded-2xl">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Especialidad</TableHead>
-              <TableHead>Comisión</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {!barbers || barbers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                  No hay barberos todavía.
-                </TableCell>
-              </TableRow>
-            ) : (
-              barbers.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell className="font-medium text-foreground">
-                    <Link
-                      href={`/empleados/${b.id}`}
-                      className="flex items-center gap-2.5 hover:text-primary"
-                    >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                        {b.full_name.charAt(0).toUpperCase()}
-                      </span>
-                      {b.full_name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {b.specialty ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {Number(b.commission_pct)}%
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={b.status === "active" ? "secondary" : "outline"}>
-                      {b.status === "active" ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <BarberRowActions
-                      defaults={{
-                        id: b.id,
-                        fullName: b.full_name,
-                        specialty: b.specialty ?? undefined,
-                        commissionPct: Number(b.commission_pct),
-                        status: b.status,
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {!barbers || barbers.length === 0 ? (
+        <div className="glass rounded-2xl py-12 text-center text-muted-foreground">
+          No hay barberos todavía.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {barbers.map((b) => (
+            <div
+              key={b.id}
+              className="glass flex items-center gap-4 rounded-2xl p-4"
+            >
+              <Link
+                href={`/empleados/${b.id}`}
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-lg font-bold text-primary-foreground shadow-lg shadow-primary/20"
+              >
+                {b.full_name.charAt(0).toUpperCase()}
+              </Link>
+              <div className="min-w-0 flex-1">
+                <Link
+                  href={`/empleados/${b.id}`}
+                  className="truncate font-semibold text-foreground hover:text-primary"
+                >
+                  {b.full_name}
+                </Link>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {b.specialty ?? "Sin especialidad"} · {Number(b.commission_pct)}%
+                </p>
+                <Badge
+                  variant={b.status === "active" ? "secondary" : "outline"}
+                  className="mt-2"
+                >
+                  {b.status === "active" ? "Activo" : "Inactivo"}
+                </Badge>
+              </div>
+              <BarberRowActions
+                defaults={{
+                  id: b.id,
+                  fullName: b.full_name,
+                  specialty: b.specialty ?? undefined,
+                  commissionPct: Number(b.commission_pct),
+                  status: b.status,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

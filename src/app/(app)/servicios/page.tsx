@@ -3,14 +3,6 @@ import { redirect } from "next/navigation";
 import { Scissors } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
 import { NewServiceButton } from "@/components/services/new-service-button";
 import { ServiceRowActions } from "@/components/services/service-row-actions";
 
@@ -53,63 +45,47 @@ export default async function ServicesPage() {
         <NewServiceButton />
       </div>
 
-      <div className="glass rounded-2xl">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Duración</TableHead>
-              <TableHead>Precio</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {!services || services.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                  No hay servicios todavía.
-                </TableCell>
-              </TableRow>
-            ) : (
-              services.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell className="font-medium text-foreground">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Scissors className="h-3.5 w-3.5" />
-                      </span>
-                      {s.name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {s.duration_minutes} min
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {Number(s.price).toFixed(2)}€
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={s.status === "active" ? "secondary" : "outline"}>
-                      {s.status === "active" ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <ServiceRowActions
-                      defaults={{
-                        id: s.id,
-                        name: s.name,
-                        durationMinutes: s.duration_minutes,
-                        price: Number(s.price),
-                        status: s.status,
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {!services || services.length === 0 ? (
+        <div className="glass rounded-2xl py-12 text-center text-muted-foreground">
+          No hay servicios todavía.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {services.map((s) => (
+            <div
+              key={s.id}
+              className="glass flex items-center gap-4 rounded-2xl p-4"
+            >
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg shadow-primary/20">
+                <Scissors className="h-6 w-6" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-foreground">
+                  {s.name}
+                </p>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {s.duration_minutes} min · {Number(s.price).toFixed(2)}€
+                </p>
+                <Badge
+                  variant={s.status === "active" ? "secondary" : "outline"}
+                  className="mt-2"
+                >
+                  {s.status === "active" ? "Activo" : "Inactivo"}
+                </Badge>
+              </div>
+              <ServiceRowActions
+                defaults={{
+                  id: s.id,
+                  name: s.name,
+                  durationMinutes: s.duration_minutes,
+                  price: Number(s.price),
+                  status: s.status,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
