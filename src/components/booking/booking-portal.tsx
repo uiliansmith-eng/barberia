@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Award, CalendarDays, Scissors, Search } from "lucide-react";
+import { Award, CalendarDays, Crown, Medal, Scissors, Search, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,20 @@ const statusLabels: Record<string, string> = {
   cancelled: "Cancelada",
   no_show: "No presentado",
 };
+
+const TIERS = [
+  { name: "Silver", min: 0, icon: Medal, color: "oklch(0.75 0.01 250)" },
+  { name: "Gold", min: 5, icon: Trophy, color: "oklch(0.8 0.16 78)" },
+  { name: "Platinum", min: 15, icon: Crown, color: "oklch(0.78 0.03 260)" },
+] as const;
+
+function currentTier(visits: number) {
+  return [...TIERS].reverse().find((t) => visits >= t.min) ?? TIERS[0];
+}
+
+function nextTier(visits: number) {
+  return TIERS.find((t) => t.min > visits) ?? null;
+}
 
 const TABS = [
   { id: "book", label: "Reservar", icon: Scissors },
@@ -110,6 +124,31 @@ export function BookingPortal({
 
       {(tab === "appointments" || tab === "points") && (
         <div className="flex flex-col gap-4">
+          {tab === "points" && (
+            <div className="glass rounded-2xl p-5">
+              <h2 className="text-sm font-semibold">Programa VIP</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Suma 1 punto por cada corte completado y sube de nivel.
+              </p>
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                {TIERS.map((t) => (
+                  <div key={t.name} className="flex flex-col items-center gap-1.5 text-center">
+                    <span
+                      className="flex h-10 w-10 items-center justify-center rounded-full"
+                      style={{ backgroundColor: `color-mix(in oklch, ${t.color} 20%, transparent)`, color: t.color }}
+                    >
+                      <t.icon className="h-5 w-5" />
+                    </span>
+                    <p className="text-xs font-medium">{t.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t.min === 0 ? "Desde el inicio" : `${t.min}+ visitas`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="glass flex items-center gap-2 rounded-2xl p-2">
             <Search className="ml-2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -130,18 +169,47 @@ export function BookingPortal({
             </p>
           )}
 
-          {result && result.found && tab === "points" && (
-            <div className="glass-strong flex flex-col items-center gap-2 rounded-3xl p-8 text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
-                <Award className="h-6 w-6" />
-              </span>
-              <p className="text-sm text-muted-foreground">Hola {result.full_name}</p>
-              <p className="text-3xl font-semibold">{result.visits}</p>
-              <p className="text-sm text-muted-foreground">
-                {result.visits === 1 ? "visita completada" : "visitas completadas"}
-              </p>
-            </div>
-          )}
+          {result && result.found && tab === "points" && (() => {
+            const tier = currentTier(result.visits);
+            const next = nextTier(result.visits);
+            const progress = next
+              ? Math.min(100, (result.visits / next.min) * 100)
+              : 100;
+            return (
+              <div className="glass-strong flex flex-col items-center gap-2 rounded-3xl p-8 text-center">
+                <span
+                  className="flex h-14 w-14 items-center justify-center rounded-full"
+                  style={{
+                    backgroundColor: `color-mix(in oklch, ${tier.color} 20%, transparent)`,
+                    color: tier.color,
+                  }}
+                >
+                  <tier.icon className="h-6 w-6" />
+                </span>
+                <p className="text-sm text-muted-foreground">Hola {result.full_name}</p>
+                <Badge style={{ backgroundColor: tier.color, color: "black" }}>
+                  Nivel {tier.name}
+                </Badge>
+                <p className="mt-2 text-3xl font-semibold">{result.visits}</p>
+                <p className="text-sm text-muted-foreground">
+                  {result.visits === 1 ? "visita completada" : "visitas completadas"}
+                </p>
+                {next && (
+                  <div className="mt-4 w-full max-w-xs">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {next.min - result.visits} visitas más para nivel {next.name}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {result && result.found && tab === "appointments" && (
             <div className="flex flex-col gap-3">
