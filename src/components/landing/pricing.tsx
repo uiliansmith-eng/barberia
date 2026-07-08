@@ -71,57 +71,58 @@ export function Pricing() {
 
         <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3">
           {plans.map((plan) => (
-            <Card
-              key={plan.name}
-              className={cn(
-                "relative border-border bg-card shadow-lg shadow-black/20",
-                plan.highlighted &&
-                  "border-primary/40 shadow-xl shadow-primary/10 ring-1 ring-primary/10"
-              )}
-            >
+            <div key={plan.name} className="relative">
               {plan.highlighted && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
+                <Badge className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 bg-primary text-primary-foreground">
                   Más popular
                 </Badge>
               )}
-              <CardHeader>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {plan.name}
-                </p>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-4xl font-semibold text-foreground">
-                    {plan.price}
-                  </span>
-                  <span className="text-muted-foreground">{plan.period}</span>
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {plan.description}
-                </p>
-                {plan.trialNote && (
-                  <p className="mt-1 text-xs font-medium text-primary">
-                    {plan.trialNote}
-                  </p>
+              <Card
+                className={cn(
+                  "border-border bg-card shadow-lg shadow-black/20",
+                  plan.highlighted &&
+                    "border-primary/40 shadow-xl shadow-primary/10 ring-1 ring-primary/10"
                 )}
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm text-foreground/85">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className="mt-8 w-full"
-                  variant={plan.highlighted ? "default" : "outline"}
-                  nativeButton={false}
-                  render={<Link href="/registro" />}
-                >
-                  {plan.cta}
-                </Button>
-              </CardContent>
-            </Card>
+              >
+                <CardHeader>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {plan.name}
+                  </p>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-4xl font-semibold text-foreground">
+                      {plan.price}
+                    </span>
+                    <span className="text-muted-foreground">{plan.period}</span>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {plan.description}
+                  </p>
+                  {plan.trialNote && (
+                    <p className="mt-1 text-xs font-medium text-primary">
+                      {plan.trialNote}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2 text-sm text-foreground/85">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className="mt-8 w-full"
+                    variant={plan.highlighted ? "default" : "outline"}
+                    nativeButton={false}
+                    render={<Link href="/registro" />}
+                  >
+                    {plan.cta}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           ))}
         </div>
       </div>
