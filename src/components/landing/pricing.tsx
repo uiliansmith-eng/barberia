@@ -15,7 +15,6 @@ const plans = [
       "Reservas online",
       "Hasta 50 citas al mes",
       "Listado en el directorio de BarberOS",
-      "Agenda y clientes",
     ],
     cta: "Empieza gratis",
     highlighted: false,
