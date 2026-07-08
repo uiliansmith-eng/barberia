@@ -322,16 +322,6 @@ export function BookingPortal({
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10">
-      <div className="flex items-center gap-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Scissors className="h-4 w-4" />
-        </span>
-        <div>
-          <p className="font-semibold tracking-tight">{tenant.name}</p>
-          <p className="text-xs text-muted-foreground">Reserva tu cita</p>
-        </div>
-      </div>
-
       <div className="glass flex w-fit gap-1 rounded-full p-1">
         {TABS.map((t) => (
           <button

@@ -179,17 +179,19 @@ export function BookingWizard({
 
       {step === 0 && (
         <div className="flex flex-col gap-8">
-          <div className="glass-strong flex flex-col items-center gap-3 rounded-3xl p-8 text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg shadow-primary/20">
-              <Scissors className="h-7 w-7" />
-            </span>
-            <h1 className="text-2xl font-semibold tracking-tight">{tenant.name}</h1>
-            <p className="text-sm text-muted-foreground">
-              Reserva tu cita en segundos, elige el servicio que quieras.
-            </p>
-          </div>
+          {!noHeader && (
+            <div className="glass-strong flex flex-col items-center gap-3 rounded-3xl p-8 text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg shadow-primary/20">
+                <Scissors className="h-7 w-7" />
+              </span>
+              <h1 className="text-2xl font-semibold tracking-tight">{tenant.name}</h1>
+              <p className="text-sm text-muted-foreground">
+                Reserva tu cita en segundos, elige el servicio que quieras.
+              </p>
+            </div>
+          )}
 
-          {barbers.length > 0 && (
+          {!noHeader && barbers.length > 0 && (
             <div>
               <h2 className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Nuestro equipo
