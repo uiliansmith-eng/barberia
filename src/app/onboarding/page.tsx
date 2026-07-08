@@ -4,6 +4,7 @@ import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 
 export const metadata: Metadata = {
   title: "Configura tu barbería — BarberOS",
+  robots: { index: false, follow: false },
 };
 
 export default function OnboardingPage() {

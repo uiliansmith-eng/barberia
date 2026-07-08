@@ -2,8 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
+const directoryDescription =
+  "Encuentra barberías cerca de ti, compara precios, valoraciones y reserva tu cita online en segundos.";
+
 export const metadata: Metadata = {
   title: "Encuentra tu barbería — BarberOS",
+  description: directoryDescription,
+  alternates: { canonical: "/barberias" },
+  openGraph: {
+    title: "Encuentra tu barbería — BarberOS",
+    description: directoryDescription,
+    url: "/barberias",
+  },
 };
 
 type TenantResult = {
