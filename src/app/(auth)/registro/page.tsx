@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { RegisterForm } from "@/components/auth/register-form";
 
 export const metadata: Metadata = {
@@ -15,6 +16,17 @@ export default function RegisterPage() {
         Sin tarjeta de crédito. Cancela cuando quieras.
       </p>
       <RegisterForm />
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        Al crear una cuenta aceptas nuestros{" "}
+        <Link href="/legal/terminos" className="underline">
+          Términos
+        </Link>{" "}
+        y nuestra{" "}
+        <Link href="/legal/privacidad" className="underline">
+          Política de Privacidad
+        </Link>
+        .
+      </p>
     </>
   );
 }
