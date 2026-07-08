@@ -1,12 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, Euro, UserPlus, Star } from "lucide-react";
+import { ArrowRight, CalendarCheck, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const stats = [
-  { label: "Citas hoy", value: "18", icon: CalendarCheck },
-  { label: "Ingresos hoy", value: "€640", icon: Euro },
-  { label: "Clientes nuevos", value: "5", icon: UserPlus },
-];
 
 export function Hero() {
   return (
@@ -63,36 +58,24 @@ export function Hero() {
       </div>
 
       <div className="mx-auto mt-16 max-w-5xl">
-        <div className="glass-strong rounded-2xl p-2 shadow-2xl shadow-primary/10">
+        <div className="glass-strong overflow-hidden rounded-2xl p-2 shadow-2xl shadow-primary/10">
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <span className="h-3 w-3 rounded-full bg-red-400" />
             <span className="h-3 w-3 rounded-full bg-yellow-400" />
             <span className="h-3 w-3 rounded-full bg-green-400" />
             <span className="ml-3 flex items-center gap-1.5 text-xs text-muted-foreground">
               <CalendarCheck className="h-3.5 w-3.5" />
-              app.barberos.ai/agenda
+              barberos.appstles.com/dashboard
             </span>
           </div>
-          <div className="grid grid-cols-1 gap-3 p-6 sm:grid-cols-3">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="glass rounded-xl p-5 text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <stat.icon className="h-3.5 w-3.5" />
-                  </span>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {stat.label}
-                  </p>
-                </div>
-                <p className="mt-3 text-2xl font-semibold text-foreground">
-                  {stat.value}
-                </p>
-              </div>
-            ))}
-          </div>
+          <Image
+            src="/dashboard-preview.png"
+            alt="Dashboard de BarberOS mostrando ingresos, citas del día y agenda en tiempo real"
+            width={1440}
+            height={700}
+            priority
+            className="w-full rounded-b-xl"
+          />
         </div>
       </div>
     </section>
