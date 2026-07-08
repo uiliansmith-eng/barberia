@@ -41,6 +41,9 @@ export const metadata: Metadata = {
     "citas barbería online",
   ],
   robots: { index: true, follow: true },
+  verification: {
+    google: "9927iUnCBSEWafpZNzcQI5gPiorI6dk83ODqyy3IaDE",
+  },
   openGraph: {
     type: "website",
     locale: "es_ES",
