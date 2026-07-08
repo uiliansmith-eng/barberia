@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/dashboard", label: "Resumen" },
-  { href: "/agenda", label: "Citas" },
-  { href: "/clientes", label: "Clientes" },
-  { href: "/empleados", label: "Barberos" },
-  { href: "/servicios", label: "Servicios" },
-  { href: "/inventario", label: "Inventario" },
+  { href: "/dashboard", label: "Resumen", gated: false },
+  { href: "/agenda", label: "Citas", gated: true },
+  { href: "/clientes", label: "Clientes", gated: true },
+  { href: "/empleados", label: "Barberos", gated: false },
+  { href: "/servicios", label: "Servicios", gated: false },
+  { href: "/inventario", label: "Inventario", gated: true },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -31,9 +31,11 @@ function getInitials(name: string) {
 export function AppSidebar({
   fullName,
   role,
+  isPaid,
 }: {
   fullName: string;
   role: string;
+  isPaid: boolean;
 }) {
   const pathname = usePathname();
 
@@ -67,7 +69,12 @@ export function AppSidebar({
                   active ? "bg-primary" : "bg-muted-foreground/40"
                 )}
               />
-              {link.label}
+              <span className="flex-1">{link.label}</span>
+              {link.gated && !isPaid && (
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-primary">
+                  PRO
+                </span>
+              )}
             </Link>
           );
         })}

@@ -4,6 +4,8 @@ import { Package } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NewInventoryItemButton } from "@/components/inventory/new-item-button";
 import { InventoryItemRowActions } from "@/components/inventory/item-row-actions";
+import { getSubscriptionInfo } from "@/lib/subscription";
+import { Paywall } from "@/components/dashboard/paywall";
 
 export const metadata: Metadata = {
   title: "Inventario — BarberOS",
@@ -34,11 +36,27 @@ export default async function InventoryPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("tenant_id")
+    .select("tenant_id, role")
     .eq("id", user.id)
     .single();
 
   if (!profile?.tenant_id) redirect("/onboarding");
+
+  const { isPaid } = await getSubscriptionInfo(profile.tenant_id, supabase);
+  if (!isPaid) {
+    return (
+      <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-10">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Inventario
+        </h1>
+        <Paywall
+          title="El inventario es una función de pago"
+          description="Mejora a Pro o Business para controlar el stock de productos de tu barbería."
+          canUpgrade={profile.role === "owner"}
+        />
+      </div>
+    );
+  }
 
   const { data: items } = await supabase
     .from("inventory_items")

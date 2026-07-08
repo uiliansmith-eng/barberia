@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { NewCustomerButton } from "@/components/customers/new-customer-button";
 import { CustomerRowActions } from "@/components/customers/customer-row-actions";
 import { toWallClockDate } from "@/lib/time";
+import { getSubscriptionInfo } from "@/lib/subscription";
+import { Paywall } from "@/components/dashboard/paywall";
 
 export const metadata: Metadata = {
   title: "Clientes — BarberOS",
@@ -27,11 +29,27 @@ export default async function CustomersPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("tenant_id")
+    .select("tenant_id, role")
     .eq("id", user.id)
     .single();
 
   if (!profile?.tenant_id) redirect("/onboarding");
+
+  const { isPaid } = await getSubscriptionInfo(profile.tenant_id, supabase);
+  if (!isPaid) {
+    return (
+      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-10">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Clientes
+        </h1>
+        <Paywall
+          title="La gestión de clientes es una función de pago"
+          description="Mejora a Pro o Business para llevar la ficha de tus clientes: historial de visitas, gasto total y contacto."
+          canUpgrade={profile.role === "owner"}
+        />
+      </div>
+    );
+  }
 
   let query = supabase
     .from("customers")

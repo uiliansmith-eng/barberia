@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app/sidebar";
+import { getSubscriptionInfo } from "@/lib/subscription";
 
 export default async function AppLayout({
   children,
@@ -13,21 +14,26 @@ export default async function AppLayout({
 
   let fullName = "";
   let role = "";
+  let isPaid = false;
 
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, role")
+      .select("full_name, role, tenant_id")
       .eq("id", user.id)
       .single();
 
     fullName = profile?.full_name ?? user.email ?? "";
     role = profile?.role ?? "";
+
+    if (profile?.tenant_id) {
+      isPaid = (await getSubscriptionInfo(profile.tenant_id, supabase)).isPaid;
+    }
   }
 
   return (
     <div className="app-theme flex min-h-screen bg-background text-foreground">
-      <AppSidebar fullName={fullName} role={role} />
+      <AppSidebar fullName={fullName} role={role} isPaid={isPaid} />
       <main className="min-h-screen flex-1 pl-[220px]">{children}</main>
     </div>
   );

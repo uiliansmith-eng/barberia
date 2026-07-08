@@ -2,11 +2,9 @@
 
 import { useTransition } from "react";
 import { Crown, ExternalLink } from "lucide-react";
-import {
-  createSubscriptionCheckout,
-  createBillingPortalSession,
-} from "@/app/(app)/dashboard/subscription-actions";
+import { createBillingPortalSession } from "@/app/(app)/dashboard/subscription-actions";
 import { Button } from "@/components/ui/button";
+import { UpgradeButtons } from "@/components/dashboard/upgrade-buttons";
 
 const PLAN_LABELS: Record<string, string> = {
   pro: "Pro",
@@ -24,13 +22,6 @@ export function PlanCard({
   const isActive =
     (plan === "pro" || plan === "business") &&
     (status === "active" || status === "trialing");
-
-  function handleUpgrade(target: "pro" | "business") {
-    startTransition(async () => {
-      const result = await createSubscriptionCheckout(target);
-      if ("url" in result) window.location.href = result.url;
-    });
-  }
 
   function handleManage() {
     startTransition(async () => {
@@ -59,19 +50,7 @@ export function PlanCard({
           <ExternalLink className="h-3.5 w-3.5" />
         </Button>
       ) : (
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleUpgrade("pro")}
-            disabled={pending}
-          >
-            Mejorar a Pro
-          </Button>
-          <Button size="sm" onClick={() => handleUpgrade("business")} disabled={pending}>
-            Mejorar a Business
-          </Button>
-        </div>
+        <UpgradeButtons />
       )}
     </div>
   );

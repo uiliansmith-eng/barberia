@@ -10,13 +10,13 @@ export async function getAgendaContext() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("tenant_id")
+    .select("tenant_id, role")
     .eq("id", user.id)
     .single();
 
   if (!profile?.tenant_id) return null;
 
-  return { supabase, tenantId: profile.tenant_id };
+  return { supabase, tenantId: profile.tenant_id, role: profile.role };
 }
 
 export async function getAppointmentsBetween(

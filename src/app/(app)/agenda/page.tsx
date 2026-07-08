@@ -16,6 +16,8 @@ import {
   weekDays,
 } from "@/lib/agenda/time";
 import { cn } from "@/lib/utils";
+import { getSubscriptionInfo } from "@/lib/subscription";
+import { Paywall } from "@/components/dashboard/paywall";
 
 export const metadata: Metadata = {
   title: "Agenda — BarberOS",
@@ -33,7 +35,23 @@ export default async function AgendaPage({
 
   const ctx = await getAgendaContext();
   if (!ctx) redirect("/login");
-  const { supabase, tenantId } = ctx;
+  const { supabase, tenantId, role } = ctx;
+
+  const { isPaid } = await getSubscriptionInfo(tenantId, supabase);
+  if (!isPaid) {
+    return (
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Agenda
+        </h1>
+        <Paywall
+          title="La agenda es una función de pago"
+          description="Mejora a Pro o Business para gestionar tu calendario interno de citas, además del sistema de reservas online."
+          canUpgrade={role === "owner"}
+        />
+      </div>
+    );
+  }
 
   const [rangeStart, rangeEnd] =
     view === "day"
