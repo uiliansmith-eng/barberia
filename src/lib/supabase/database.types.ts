@@ -691,7 +691,16 @@ export type Database = {
         Returns: Json
       }
       public_get_reviews: { Args: { p_tenant_id: string }; Returns: Json }
-      public_list_tenants: { Args: { p_query?: string }; Returns: Json }
+      public_list_tenants: {
+        Args: {
+          p_area?: string
+          p_open_now?: boolean
+          p_query?: string
+          p_service?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
       public_submit_review: {
         Args: {
           p_comment: string
