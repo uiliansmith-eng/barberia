@@ -1,23 +1,45 @@
 import { redirect } from "next/navigation";
-import {
-  CalendarCheck,
-  Euro,
-  UserPlus,
-  Repeat,
-  Scissors,
-  Store,
-  Receipt,
-  Users,
-  Clock,
-  UserSquare2,
-} from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getDashboardKpis, getExecutiveKpis, getBookingUsage } from "./queries";
+import {
+  getExecutiveKpis,
+  getStatCards,
+  getRevenueLast7Days,
+  getTodayAgenda,
+  getInventorySummary,
+  getBookingUsage,
+} from "./queries";
+import { getAgendaFormOptions } from "@/app/(app)/agenda/queries";
 import { BookingLinkCard } from "@/components/dashboard/booking-link-card";
 import { AppointmentsRealtimeRefresher } from "@/components/agenda/realtime-refresher";
 import { BookingUsageBanner } from "@/components/dashboard/booking-usage-banner";
 import { StripeConnectCard } from "@/components/dashboard/stripe-connect-card";
 import { PlanCard } from "@/components/dashboard/plan-card";
+import { RangeSelector } from "@/components/dashboard/range-selector";
+import { NewAppointmentButton } from "@/components/agenda/new-appointment-button";
+
+const GOLD = "#c9a227";
+const GREEN = "#5cc98a";
+const NEGATIVE = "#e07a5c";
+const RED = "#e05c5c";
+const YELLOW = "#e0b23c";
+const BLUE = "#5c7fc9";
+const DONE = "#4a4438";
+
+const AVATAR_COLORS = [GOLD, BLUE, GREEN, NEGATIVE];
+
+function delta(value: number, suffix: "%" | "" = "") {
+  const positive = value >= 0;
+  return {
+    label: `${positive ? "+" : ""}${Math.round(value)}${suffix}`,
+    color: positive ? GREEN : NEGATIVE,
+    bg: positive
+      ? "rgba(92,201,138,0.12)"
+      : "rgba(224,122,92,0.12)",
+  };
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -41,57 +63,123 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
-  const [kpis, exec, usage, { data: subscription }] = await Promise.all([
-    getDashboardKpis(profile.tenant_id, supabase),
-    getExecutiveKpis(profile.tenant_id, supabase),
-    getBookingUsage(profile.tenant_id, supabase),
-    supabase
-      .from("subscriptions")
-      .select("plan, status")
-      .eq("tenant_id", profile.tenant_id)
-      .maybeSingle(),
-  ]);
+  const tenantId = profile.tenant_id;
 
-  const cards = [
-    {
-      label: "Citas hoy",
-      value: kpis.citasHoy,
-      icon: CalendarCheck,
-    },
+  const [exec, revenue, agenda, inventory, usage, { data: subscription }, formOptions] =
+    await Promise.all([
+      getExecutiveKpis(tenantId, supabase),
+      getRevenueLast7Days(tenantId, supabase),
+      getTodayAgenda(tenantId, supabase),
+      getInventorySummary(tenantId, supabase),
+      getBookingUsage(tenantId, supabase),
+      supabase
+        .from("subscriptions")
+        .select("plan, status")
+        .eq("tenant_id", tenantId)
+        .maybeSingle(),
+      getAgendaFormOptions(tenantId, supabase),
+    ]);
+
+  const stats = await getStatCards(tenantId, supabase, {
+    totalClientes: exec.totalClientes,
+    clientesRecurrentesMes: exec.clientesRecurrentesMes,
+  });
+
+  const today = format(new Date(), "yyyy-MM-dd");
+  const rawDateLabel = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", {
+    locale: es,
+  });
+  const dateLabel =
+    rawDateLabel.charAt(0).toUpperCase() + rawDateLabel.slice(1);
+
+  const customerOptions = formOptions.customers.map((c) => ({
+    id: c.id,
+    label: c.phone ? `${c.full_name} · ${c.phone}` : c.full_name,
+  }));
+  const barberOptions = formOptions.barbers.map((b) => ({
+    id: b.id,
+    label: b.full_name,
+  }));
+  const serviceOptions = formOptions.services.map((s) => ({
+    id: s.id,
+    label: s.name,
+    duration: s.duration_minutes,
+    price: s.price,
+  }));
+
+  const statCards = [
     {
       label: "Ingresos hoy",
-      value: `${kpis.ingresosHoy.toFixed(2)}€`,
-      icon: Euro,
+      value: `${Math.round(stats.ingresosHoy)}€`,
+      sub: `${stats.serviciosHoy} servicio${stats.serviciosHoy === 1 ? "" : "s"}`,
+      delta: delta(stats.ingresosDeltaPct, "%"),
+    },
+    {
+      label: "Citas hoy",
+      value: stats.citasHoy,
+      sub: `${stats.citasPendientes} pendiente${stats.citasPendientes === 1 ? "" : "s"}`,
+      delta: delta(stats.citasDelta),
     },
     {
       label: "Clientes nuevos",
-      value: kpis.clientesNuevos,
-      icon: UserPlus,
+      value: stats.clientesNuevos,
+      sub: "esta semana",
+      delta: delta(stats.clientesNuevosDelta),
     },
     {
-      label: "Clientes recurrentes",
-      value: kpis.clientesRecurrentes,
-      icon: Repeat,
+      label: "Recurrencia",
+      value: `${Math.round(stats.recurrenciaPct)}%`,
+      sub: "clientes que regresan",
+      delta: delta(stats.recurrenciaDelta, "%"),
     },
   ];
 
-  const topCount = kpis.serviciosMasVendidos[0]?.count ?? 0;
+  const maxBar = Math.max(...revenue.days.map((d) => d.amount), 1);
+  const barberRanking = [...exec.rentabilidadBarberos]
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 4);
+  const maxBarberRevenue = Math.max(
+    ...barberRanking.map((b) => b.revenue),
+    1
+  );
 
-  const topBarberProfit = exec.rentabilidadBarberos[0]?.beneficio ?? 0;
-  const topServiceRevenue = exec.rentabilidadServicios[0]?.revenue ?? 0;
-  const topHourCount = exec.horasPico[0]?.count ?? 0;
+  const statusColor: Record<string, string> = {
+    done: DONE,
+    now: GOLD,
+    upcoming: BLUE,
+  };
+
+  const levelColor: Record<string, string> = {
+    low: RED,
+    mid: YELLOW,
+    ok: GREEN,
+  };
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-16">
-      <AppointmentsRealtimeRefresher tenantId={profile.tenant_id} />
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Hola{profile?.full_name ? `, ${profile.full_name}` : ""} 👋
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+    <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-9 py-8">
+      <AppointmentsRealtimeRefresher tenantId={tenantId} />
+
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Resumen del negocio
+          </h1>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
+            {dateLabel}
+          </p>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <RangeSelector />
+          <NewAppointmentButton
+            customers={customerOptions}
+            barbers={barberOptions}
+            services={serviceOptions}
+            date={today}
+          />
+        </div>
       </div>
 
-      <div className="flex items-center gap-4 glass rounded-2xl p-6">
+      <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Store className="h-5 w-5" />
         </span>
@@ -99,18 +187,252 @@ export default async function DashboardPage() {
           <p className="text-sm text-muted-foreground">
             Barbería:{" "}
             <span className="font-medium text-foreground">
-              {profile?.tenants?.name}
+              {profile.tenants?.name}
             </span>
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Rol: <span className="font-medium text-foreground">{profile?.role}</span>
           </p>
         </div>
       </div>
 
-      {profile?.tenants?.slug && <BookingLinkCard slug={profile.tenants.slug} />}
+      {/* STAT CARDS */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((s) => (
+          <div
+            key={s.label}
+            className="rounded-xl border border-border bg-card p-5"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                {s.label}
+              </span>
+              <span
+                className="rounded-full px-2 py-0.5 text-[11px] font-bold"
+                style={{ color: s.delta.color, backgroundColor: s.delta.bg }}
+              >
+                {s.delta.label}
+              </span>
+            </div>
+            <p className="mt-2.5 text-[28px] font-extrabold text-foreground">
+              {s.value}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground/70">{s.sub}</p>
+          </div>
+        ))}
+      </div>
 
-      {profile?.role === "owner" && profile.tenants && (
+      {/* REVENUE CHART + AGENDA */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-[15px] font-bold text-foreground">
+              Ingresos — últimos 7 días
+            </h2>
+            <p className="text-[13px] font-bold text-primary">
+              {Math.round(revenue.total)}€{" "}
+              <span className="font-normal text-muted-foreground/70">
+                total semana
+              </span>
+            </p>
+          </div>
+          <div className="flex h-[150px] items-end gap-3.5">
+            {revenue.days.map((d, i) => {
+              const isLast = i === revenue.days.length - 1;
+              const height = Math.max((d.amount / maxBar) * 110, 4);
+              return (
+                <div
+                  key={`${d.day}-${i}`}
+                  className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+                >
+                  <span className="text-[11px] text-muted-foreground">
+                    {Math.round(d.amount)}€
+                  </span>
+                  <div
+                    className="w-full max-w-[34px] rounded-t-[5px]"
+                    style={{
+                      height,
+                      backgroundColor: isLast ? GOLD : "#3a3226",
+                    }}
+                  />
+                  <span className="text-[11px] text-muted-foreground/70">
+                    {d.day}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-col rounded-xl border border-border bg-card p-5">
+          <h2 className="mb-4 text-[15px] font-bold text-foreground">
+            Agenda de hoy
+          </h2>
+          <div className="flex flex-1 flex-col gap-0.5 overflow-auto">
+            {agenda.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No hay citas hoy todavía.
+              </p>
+            ) : (
+              agenda.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center gap-3 border-b border-[#262019] py-2.5 last:border-b-0"
+                >
+                  <span className="w-11 shrink-0 text-xs text-muted-foreground">
+                    {a.time}
+                  </span>
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: statusColor[a.bucket] }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold text-foreground">
+                      {a.client}
+                    </p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {a.service} · {a.barber}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* BARBERS + SERVICES + INVENTORY */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h2 className="mb-4 text-[15px] font-bold text-foreground">
+            Desempeño de barberos
+          </h2>
+          {barberRanking.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Todavía no hay barberos configurados.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {barberRanking.map((b, i) => (
+                <div key={b.name}>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-[#141210]"
+                        style={{
+                          backgroundColor:
+                            AVATAR_COLORS[i % AVATAR_COLORS.length],
+                        }}
+                      >
+                        {b.name
+                          .split(" ")
+                          .map((p) => p[0])
+                          .slice(0, 2)
+                          .join("")
+                          .toUpperCase()}
+                      </span>
+                      <span className="text-[13px] font-semibold text-foreground">
+                        {b.name}
+                      </span>
+                    </div>
+                    <span className="text-[13px] font-bold text-primary">
+                      {Math.round(b.revenue)}€
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-[#262019]">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${(b.revenue / maxBarberRevenue) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h2 className="mb-4 text-[15px] font-bold text-foreground">
+            Servicios más vendidos
+          </h2>
+          {exec.rentabilidadServicios.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Todavía no hay citas completadas este mes.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-0.5">
+              {exec.rentabilidadServicios.slice(0, 5).map((s) => (
+                <div
+                  key={s.name}
+                  className="flex items-center justify-between border-b border-[#262019] py-2.5 last:border-b-0"
+                >
+                  <div>
+                    <p className="text-[13px] font-semibold text-foreground">
+                      {s.name}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {s.citas} servicio{s.citas === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <span className="text-[13px] font-bold text-foreground">
+                    {Math.round(s.revenue)}€
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-[15px] font-bold text-foreground">
+              Inventario
+            </h2>
+            {inventory.lowStockCount > 0 && (
+              <span
+                className="rounded-full px-2 py-0.5 text-[11px] font-bold"
+                style={{ color: RED, backgroundColor: "rgba(224,92,92,0.12)" }}
+              >
+                {inventory.lowStockCount} bajo
+                {inventory.lowStockCount === 1 ? "" : "s"}
+              </span>
+            )}
+          </div>
+          {inventory.items.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Todavía no has añadido productos.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-0.5">
+              {inventory.items.map((i) => (
+                <div
+                  key={i.id}
+                  className="flex items-center justify-between border-b border-[#262019] py-2.5 last:border-b-0"
+                >
+                  <span className="text-[13px] font-semibold text-foreground">
+                    {i.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-xs font-bold"
+                      style={{ color: levelColor[i.level] }}
+                    >
+                      {i.stock} {i.unit}
+                    </span>
+                    <span
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ backgroundColor: levelColor[i.level] }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {profile.tenants?.slug && <BookingLinkCard slug={profile.tenants.slug} />}
+
+      {profile.role === "owner" && profile.tenants && (
         <>
           <PlanCard
             plan={subscription?.plan ?? null}
@@ -128,237 +450,6 @@ export default async function DashboardPage() {
         limit={usage.limit}
         isPaid={usage.isPaid}
       />
-
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">Hoy</h2>
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {cards.map((card) => (
-            <div
-              key={card.label}
-              className="glass rounded-2xl p-4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <card.icon className="h-4 w-4" />
-              </span>
-              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {card.label}
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-foreground">
-                {card.value}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Scissors className="h-3.5 w-3.5" />
-          </span>
-          Servicios más vendidos hoy
-        </h2>
-        <div className="mt-3 glass rounded-2xl p-4">
-          {kpis.serviciosMasVendidos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Todavía no hay citas registradas hoy.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {kpis.serviciosMasVendidos.map((s, i) => (
-                <li key={s.name} className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground/85">
-                      <span className="mr-2 text-muted-foreground/70">#{i + 1}</span>
-                      {s.name}
-                    </span>
-                    <span className="font-medium text-foreground">
-                      {s.count} {s.count === 1 ? "cita" : "citas"}
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary"
-                      style={{
-                        width: `${topCount ? (s.count / topCount) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Dashboard ejecutivo{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            · este mes
-          </span>
-        </h2>
-
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="glass rounded-2xl p-4">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Receipt className="h-4 w-4" />
-            </span>
-            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Ticket medio
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {exec.ticketMedio.toFixed(2)}€
-            </p>
-          </div>
-          <div className="glass rounded-2xl p-4">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Users className="h-4 w-4" />
-            </span>
-            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Clientes recurrentes
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {exec.clientesRecurrentesMes}
-              <span className="text-sm font-normal text-muted-foreground">
-                {" "}
-                / {exec.totalClientes}
-              </span>
-            </p>
-          </div>
-          <div className="glass rounded-2xl p-4">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Clock className="h-4 w-4" />
-            </span>
-            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Hora pico
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {exec.horasPico[0]
-                ? `${String(exec.horasPico[0].hour).padStart(2, "0")}:00`
-                : "—"}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 glass rounded-2xl p-4">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Clock className="h-3.5 w-3.5" />
-            </span>
-            Horas pico
-          </h3>
-          {exec.horasPico.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Todavía no hay citas este mes.
-            </p>
-          ) : (
-            <ul className="mt-3 flex flex-col gap-3">
-              {exec.horasPico.map((h) => (
-                <li key={h.hour} className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground/85">
-                      {String(h.hour).padStart(2, "0")}:00 –{" "}
-                      {String(h.hour + 1).padStart(2, "0")}:00
-                    </span>
-                    <span className="font-medium text-foreground">
-                      {h.count} {h.count === 1 ? "cita" : "citas"}
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary"
-                      style={{
-                        width: `${topHourCount ? (h.count / topHourCount) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="glass rounded-2xl p-4">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <UserSquare2 className="h-3.5 w-3.5" />
-              </span>
-              Rentabilidad por barbero
-            </h3>
-            {exec.rentabilidadBarberos.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">
-                Todavía no hay barberos configurados.
-              </p>
-            ) : (
-              <ul className="mt-3 flex flex-col gap-4">
-                {exec.rentabilidadBarberos.map((b) => (
-                  <li key={b.name} className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-foreground/85">{b.name}</span>
-                      <span className="font-medium text-foreground">
-                        {b.beneficio.toFixed(2)}€
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {b.citas} {b.citas === 1 ? "cita" : "citas"} ·{" "}
-                      {b.revenue.toFixed(2)}€ ingresos · {b.commissionPct}% comisión (
-                      {b.comision.toFixed(2)}€)
-                    </p>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{
-                          width: `${topBarberProfit ? (b.beneficio / topBarberProfit) * 100 : 0}%`,
-                        }}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="glass rounded-2xl p-4">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Scissors className="h-3.5 w-3.5" />
-              </span>
-              Rentabilidad por servicio
-            </h3>
-            {exec.rentabilidadServicios.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">
-                Todavía no hay citas completadas este mes.
-              </p>
-            ) : (
-              <ul className="mt-3 flex flex-col gap-4">
-                {exec.rentabilidadServicios.map((s) => (
-                  <li key={s.name} className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-foreground/85">{s.name}</span>
-                      <span className="font-medium text-foreground">
-                        {s.revenue.toFixed(2)}€
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {s.citas} {s.citas === 1 ? "cita" : "citas"}
-                    </p>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{
-                          width: `${topServiceRevenue ? (s.revenue / topServiceRevenue) * 100 : 0}%`,
-                        }}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

@@ -279,6 +279,50 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          created_at: string
+          id: string
+          low_stock_threshold: number
+          medium_stock_threshold: number
+          name: string
+          stock: number
+          tenant_id: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          low_stock_threshold?: number
+          medium_stock_threshold?: number
+          name: string
+          stock?: number
+          tenant_id: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          low_stock_threshold?: number
+          medium_stock_threshold?: number
+          name?: string
+          stock?: number
+          tenant_id?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           address: string | null

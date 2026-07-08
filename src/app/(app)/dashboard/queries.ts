@@ -2,82 +2,274 @@ import { createClient } from "@/lib/supabase/server";
 import { toWallClockDate } from "@/lib/time";
 
 function todayRange() {
+  return dayRange(0);
+}
+
+function dayRange(offsetDays: number) {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() + offsetDays);
   const end = new Date(start);
   end.setDate(end.getDate() + 1);
   return { startIso: start.toISOString(), endIso: end.toISOString() };
 }
 
-function monthRange() {
-  const now = new Date();
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+// `daysBack` calendar days ending today (inclusive) when offsetDays is 0;
+// pass offsetDays: -7 to get the equivalent window one week earlier.
+function daysRange(daysBack: number, offsetDays = 0) {
+  const end = new Date();
+  end.setHours(0, 0, 0, 0);
+  end.setDate(end.getDate() + offsetDays + 1);
+  const start = new Date(end);
+  start.setDate(start.getDate() - daysBack);
   return { startIso: start.toISOString(), endIso: end.toISOString() };
 }
 
-export async function getDashboardKpis(
+function monthRange(offsetMonths = 0) {
+  const now = new Date();
+  const start = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offsetMonths, 1)
+  );
+  const end = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offsetMonths + 1, 1)
+  );
+  return { startIso: start.toISOString(), endIso: end.toISOString() };
+}
+
+const WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+function dateKey(d: Date) {
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+async function getRecurrenceRate(
+  tenantId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  range: { startIso: string; endIso: string }
+) {
+  const { data } = await supabase
+    .from("appointments")
+    .select("customer_id")
+    .eq("tenant_id", tenantId)
+    .gte("starts_at", range.startIso)
+    .lt("starts_at", range.endIso)
+    .eq("status", "completed");
+
+  const visitCounts = new Map<string, number>();
+  for (const a of data ?? []) {
+    visitCounts.set(a.customer_id, (visitCounts.get(a.customer_id) ?? 0) + 1);
+  }
+  const totalClientes = visitCounts.size;
+  const clientesRecurrentes = [...visitCounts.values()].filter(
+    (n) => n > 1
+  ).length;
+
+  return { totalClientes, clientesRecurrentes };
+}
+
+export async function getStatCards(
+  tenantId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  currentMonthRecurrence: { totalClientes: number; clientesRecurrentesMes: number }
+) {
+  const today = todayRange();
+  const yesterday = dayRange(-1);
+  const thisWeek = daysRange(7, 0);
+  const lastWeek = daysRange(7, -7);
+  const lastMonth = monthRange(-1);
+
+  const [
+    { data: todayAppointments },
+    { data: yesterdayAppointments },
+    { count: newThisWeek },
+    { count: newLastWeek },
+    lastMonthRecurrence,
+  ] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select("id, price, status")
+      .eq("tenant_id", tenantId)
+      .gte("starts_at", today.startIso)
+      .lt("starts_at", today.endIso)
+      .neq("status", "cancelled"),
+    supabase
+      .from("appointments")
+      .select("id, price")
+      .eq("tenant_id", tenantId)
+      .gte("starts_at", yesterday.startIso)
+      .lt("starts_at", yesterday.endIso)
+      .neq("status", "cancelled"),
+    supabase
+      .from("customers")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .gte("created_at", thisWeek.startIso)
+      .lt("created_at", thisWeek.endIso),
+    supabase
+      .from("customers")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .gte("created_at", lastWeek.startIso)
+      .lt("created_at", lastWeek.endIso),
+    getRecurrenceRate(tenantId, supabase, lastMonth),
+  ]);
+
+  const todayAppts = todayAppointments ?? [];
+  const yesterdayAppts = yesterdayAppointments ?? [];
+
+  const ingresosHoy = todayAppts.reduce((sum, a) => sum + Number(a.price), 0);
+  const ingresosAyer = yesterdayAppts.reduce(
+    (sum, a) => sum + Number(a.price),
+    0
+  );
+  const ingresosDeltaPct =
+    ingresosAyer > 0
+      ? ((ingresosHoy - ingresosAyer) / ingresosAyer) * 100
+      : ingresosHoy > 0
+        ? 100
+        : 0;
+
+  const citasHoy = todayAppts.length;
+  const citasDelta = citasHoy - yesterdayAppts.length;
+  const citasPendientes = todayAppts.filter(
+    (a) => a.status === "scheduled" || a.status === "confirmed"
+  ).length;
+
+  const clientesNuevos = newThisWeek ?? 0;
+  const clientesNuevosDelta = (newThisWeek ?? 0) - (newLastWeek ?? 0);
+
+  const recurrenciaPct =
+    currentMonthRecurrence.totalClientes > 0
+      ? (currentMonthRecurrence.clientesRecurrentesMes /
+          currentMonthRecurrence.totalClientes) *
+        100
+      : 0;
+  const recurrenciaPctAnterior =
+    lastMonthRecurrence.totalClientes > 0
+      ? (lastMonthRecurrence.clientesRecurrentes /
+          lastMonthRecurrence.totalClientes) *
+        100
+      : 0;
+  const recurrenciaDelta = recurrenciaPct - recurrenciaPctAnterior;
+
+  return {
+    ingresosHoy,
+    ingresosDeltaPct,
+    serviciosHoy: citasHoy,
+    citasHoy,
+    citasDelta,
+    citasPendientes,
+    clientesNuevos,
+    clientesNuevosDelta,
+    recurrenciaPct,
+    recurrenciaDelta,
+  };
+}
+
+export async function getRevenueLast7Days(
+  tenantId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>
+) {
+  const { startIso, endIso } = daysRange(7, 0);
+
+  const { data } = await supabase
+    .from("appointments")
+    .select("starts_at, price")
+    .eq("tenant_id", tenantId)
+    .gte("starts_at", startIso)
+    .lt("starts_at", endIso)
+    .neq("status", "cancelled");
+
+  const totalsByDay = new Map<string, number>();
+  for (const a of data ?? []) {
+    const key = dateKey(toWallClockDate(a.starts_at));
+    totalsByDay.set(key, (totalsByDay.get(key) ?? 0) + Number(a.price));
+  }
+
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({
+      day: WEEKDAY_LABELS[d.getDay()],
+      amount: totalsByDay.get(dateKey(d)) ?? 0,
+    });
+  }
+
+  return {
+    days,
+    total: days.reduce((sum, d) => sum + d.amount, 0),
+  };
+}
+
+export async function getTodayAgenda(
   tenantId: string,
   supabase: Awaited<ReturnType<typeof createClient>>
 ) {
   const { startIso, endIso } = todayRange();
 
-  const [{ data: todaysAppointments }, { count: newCustomersCount }] =
-    await Promise.all([
-      supabase
-        .from("appointments")
-        .select("id, price, customer_id, service_id, services(name)")
-        .eq("tenant_id", tenantId)
-        .gte("starts_at", startIso)
-        .lt("starts_at", endIso)
-        .neq("status", "cancelled"),
-      supabase
-        .from("customers")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", tenantId)
-        .gte("created_at", startIso)
-        .lt("created_at", endIso),
-    ]);
+  const { data } = await supabase
+    .from("appointments")
+    .select(
+      "id, starts_at, ends_at, status, customers(full_name), barbers(full_name), services(name)"
+    )
+    .eq("tenant_id", tenantId)
+    .gte("starts_at", startIso)
+    .lt("starts_at", endIso)
+    .neq("status", "cancelled")
+    .order("starts_at", { ascending: true })
+    .limit(5);
 
-  const appointments = todaysAppointments ?? [];
-  const citasHoy = appointments.length;
-  const ingresosHoy = appointments.reduce((sum, a) => sum + Number(a.price), 0);
-  const clientesNuevos = newCustomersCount ?? 0;
+  const nowIso = new Date().toISOString();
 
-  const customerIds = [...new Set(appointments.map((a) => a.customer_id))];
-  let clientesRecurrentes = 0;
+  return (data ?? []).map((a) => {
+    let bucket: "done" | "now" | "upcoming";
+    if (a.status === "completed" || a.status === "no_show" || a.ends_at < nowIso) {
+      bucket = "done";
+    } else if (a.starts_at <= nowIso) {
+      bucket = "now";
+    } else {
+      bucket = "upcoming";
+    }
 
-  if (customerIds.length > 0) {
-    const { data: priorVisits } = await supabase
-      .from("appointments")
-      .select("customer_id")
-      .eq("tenant_id", tenantId)
-      .in("customer_id", customerIds)
-      .lt("starts_at", startIso)
-      .neq("status", "cancelled");
+    return {
+      id: a.id,
+      time: toWallClockDate(a.starts_at).toTimeString().slice(0, 5),
+      client: a.customers?.full_name ?? "Cliente",
+      service: a.services?.name ?? "Servicio",
+      barber: a.barbers?.full_name ?? "—",
+      bucket,
+    };
+  });
+}
 
-    clientesRecurrentes = new Set(
-      (priorVisits ?? []).map((v) => v.customer_id)
-    ).size;
-  }
+export async function getInventorySummary(
+  tenantId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>
+) {
+  const { data } = await supabase
+    .from("inventory_items")
+    .select("id, name, stock, unit, low_stock_threshold, medium_stock_threshold")
+    .eq("tenant_id", tenantId);
 
-  const serviceCounts = new Map<string, { name: string; count: number }>();
-  for (const a of appointments) {
-    const name = a.services?.name ?? "Sin servicio";
-    const entry = serviceCounts.get(a.service_id) ?? { name, count: 0 };
-    entry.count += 1;
-    serviceCounts.set(a.service_id, entry);
-  }
-  const serviciosMasVendidos = Array.from(serviceCounts.values()).sort(
-    (a, b) => b.count - a.count
-  );
+  const severity = { low: 0, mid: 1, ok: 2 } as const;
+  const withLevel = (data ?? []).map((i) => ({
+    ...i,
+    level:
+      i.stock <= i.low_stock_threshold
+        ? ("low" as const)
+        : i.stock <= i.medium_stock_threshold
+          ? ("mid" as const)
+          : ("ok" as const),
+  }));
+
+  const items = [...withLevel]
+    .sort((a, b) => severity[a.level] - severity[b.level] || a.stock - b.stock)
+    .slice(0, 5);
 
   return {
-    citasHoy,
-    ingresosHoy,
-    clientesNuevos,
-    clientesRecurrentes,
-    serviciosMasVendidos,
+    items,
+    lowStockCount: withLevel.filter((i) => i.level === "low").length,
   };
 }
 

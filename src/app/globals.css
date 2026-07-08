@@ -104,6 +104,51 @@
   --ring: oklch(0.8 0.16 78);
 }
 
+/* BarberOS app shell theme — flat dark/gold barbershop look (design handoff) */
+.app-theme {
+  --background: #141210;
+  --foreground: #efe9df;
+  --card: #1c1815;
+  --card-foreground: #efe9df;
+  --popover: #1c1815;
+  --popover-foreground: #efe9df;
+  --primary: #c9a227;
+  --primary-foreground: #141210;
+  --secondary: #1e1a15;
+  --secondary-foreground: #efe9df;
+  --muted: #1e1a15;
+  --muted-foreground: #a39c8e;
+  --accent: #262019;
+  --accent-foreground: #efe9df;
+  --destructive: #e05c5c;
+  --border: #2a2620;
+  --input: #2a2620;
+  --ring: #c9a227;
+  --sidebar: #0f0d0b;
+  --sidebar-foreground: #efe9df;
+  --sidebar-primary: #c9a227;
+  --sidebar-primary-foreground: #141210;
+  --sidebar-accent: rgba(201, 162, 39, 0.08);
+  --sidebar-accent-foreground: #efe9df;
+  --sidebar-border: #2a2620;
+  --sidebar-ring: #c9a227;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.app-theme .glass,
+.app-theme .glass-strong {
+  background-color: var(--card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.font-logo {
+  font-family: var(--font-bebas-neue), sans-serif;
+  letter-spacing: 1.5px;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

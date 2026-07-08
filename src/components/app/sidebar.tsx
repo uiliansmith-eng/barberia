@@ -2,44 +2,53 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Scissors,
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  UserSquare2,
-} from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/agenda", label: "Agenda", icon: CalendarDays },
-  { href: "/clientes", label: "Clientes", icon: Users },
-  { href: "/servicios", label: "Servicios", icon: Scissors },
-  { href: "/empleados", label: "Empleados", icon: UserSquare2 },
+  { href: "/dashboard", label: "Resumen" },
+  { href: "/agenda", label: "Citas" },
+  { href: "/clientes", label: "Clientes" },
+  { href: "/empleados", label: "Barberos" },
+  { href: "/servicios", label: "Servicios" },
+  { href: "/inventario", label: "Inventario" },
 ];
 
-export function AppSidebar() {
+const roleLabels: Record<string, string> = {
+  owner: "Dueño",
+  manager: "Gerente",
+  barber: "Barbero",
+  receptionist: "Recepción",
+};
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+export function AppSidebar({
+  fullName,
+  role,
+}: {
+  fullName: string;
+  role: string;
+}) {
   const pathname = usePathname();
 
   return (
-    <aside
-      className="dark text-sidebar-foreground fixed inset-y-0 left-0 z-40 flex w-60 shrink-0 flex-col border-r border-sidebar-border px-4 py-6 backdrop-blur-2xl backdrop-saturate-150"
-      style={{ backgroundColor: "color-mix(in oklch, var(--sidebar) 55%, transparent)" }}
-    >
-      <Link
-        href="/dashboard"
-        className="mb-8 flex items-center gap-2 px-2 font-semibold tracking-tight"
-      >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-          <Scissors className="h-4 w-4" />
-        </span>
-        BarberOS
-      </Link>
+    <aside className="fixed inset-y-0 left-0 z-40 flex w-[220px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar py-7 text-sidebar-foreground">
+      <div className="mb-5 border-b border-sidebar-border px-6 pb-7">
+        <div className="font-logo text-[28px] leading-none text-sidebar-foreground">
+          BARBER<span className="text-primary">OS</span>
+        </div>
+        <div className="mt-0.5 text-[11px] tracking-wide text-muted-foreground">
+          Panel de gerencia
+        </div>
+      </div>
 
-      <nav className="flex flex-1 flex-col gap-1 text-sm">
+      <nav className="flex flex-1 flex-col">
         {links.map((link) => {
           const active = pathname.startsWith(link.href);
           return (
@@ -47,23 +56,43 @@ export function AppSidebar() {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                "flex items-center gap-3 border-l-[3px] border-transparent px-6 py-[11px] text-sm font-medium text-muted-foreground transition hover:text-sidebar-foreground",
                 active &&
-                  "bg-sidebar-primary/15 font-medium text-sidebar-primary hover:bg-sidebar-primary/15 hover:text-sidebar-primary"
+                  "border-primary bg-sidebar-accent font-bold text-sidebar-foreground"
               )}
             >
-              <link.icon className="h-4 w-4" />
+              <span
+                className={cn(
+                  "h-2 w-2 shrink-0 rounded-[2px]",
+                  active ? "bg-primary" : "bg-muted-foreground/40"
+                )}
+              />
               {link.label}
             </Link>
           );
         })}
       </nav>
 
-      <form action={signOut}>
-        <Button type="submit" variant="outline" size="sm" className="w-full">
-          Cerrar sesión
-        </Button>
-      </form>
+      <div className="mt-5 border-t border-sidebar-border px-6 pt-5">
+        <div className="mb-3 flex items-center gap-2.5">
+          <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-primary-foreground">
+            {getInitials(fullName)}
+          </span>
+          <div className="min-w-0">
+            <div className="truncate text-[13px] font-semibold">
+              {fullName || "Usuario"}
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              {roleLabels[role] ?? (role || "—")}
+            </div>
+          </div>
+        </div>
+        <form action={signOut}>
+          <Button type="submit" variant="outline" size="sm" className="w-full">
+            Cerrar sesión
+          </Button>
+        </form>
+      </div>
     </aside>
   );
 }
