@@ -68,7 +68,10 @@ export default async function DashboardPage() {
   const tenantId = profile.tenant_id;
 
   const { plan, status, isPaid } = await getSubscriptionInfo(tenantId, supabase);
-  const usage = await getBookingUsage(tenantId, supabase, isPaid);
+  const [usage, agenda] = await Promise.all([
+    getBookingUsage(tenantId, supabase, isPaid),
+    getTodayAgenda(tenantId, supabase),
+  ]);
 
   const today = format(new Date(), "yyyy-MM-dd");
   const rawDateLabel = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", {
@@ -100,7 +103,6 @@ export default async function DashboardPage() {
       delta: ReturnType<typeof delta>;
     }[];
     revenue: Awaited<ReturnType<typeof getRevenueLast7Days>>;
-    agenda: Awaited<ReturnType<typeof getTodayAgenda>>;
     inventory: Awaited<ReturnType<typeof getInventorySummary>>;
     rentabilidadServicios: Awaited<
       ReturnType<typeof getExecutiveKpis>
@@ -113,10 +115,9 @@ export default async function DashboardPage() {
   } | null = null;
 
   if (isPaid) {
-    const [exec, revenue, agenda, inventory, formOptions] = await Promise.all([
+    const [exec, revenue, inventory, formOptions] = await Promise.all([
       getExecutiveKpis(tenantId, supabase),
       getRevenueLast7Days(tenantId, supabase),
-      getTodayAgenda(tenantId, supabase),
       getInventorySummary(tenantId, supabase),
       getAgendaFormOptions(tenantId, supabase),
     ]);
@@ -172,7 +173,6 @@ export default async function DashboardPage() {
         },
       ],
       revenue,
-      agenda,
       inventory,
       rentabilidadServicios: exec.rentabilidadServicios,
       barberRanking,
@@ -180,6 +180,44 @@ export default async function DashboardPage() {
       maxBarberRevenue: Math.max(...barberRanking.map((b) => b.revenue), 1),
     };
   }
+
+  const agendaPanel = (
+    <div className="flex flex-col rounded-xl border border-border bg-card p-5">
+      <h2 className="mb-4 text-[15px] font-bold text-foreground">
+        Agenda de hoy
+      </h2>
+      <div className="flex flex-1 flex-col gap-0.5 overflow-auto">
+        {agenda.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No hay citas hoy todavía.
+          </p>
+        ) : (
+          agenda.map((a) => (
+            <div
+              key={a.id}
+              className="flex items-center gap-3 border-b border-[#262019] py-2.5 last:border-b-0"
+            >
+              <span className="w-11 shrink-0 text-xs text-muted-foreground">
+                {a.time}
+              </span>
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: statusColor[a.bucket] }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-semibold text-foreground">
+                  {a.client}
+                </p>
+                <p className="truncate text-[11px] text-muted-foreground">
+                  {a.service} · {a.barber}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-9 py-8">
@@ -291,41 +329,7 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex flex-col rounded-xl border border-border bg-card p-5">
-              <h2 className="mb-4 text-[15px] font-bold text-foreground">
-                Agenda de hoy
-              </h2>
-              <div className="flex flex-1 flex-col gap-0.5 overflow-auto">
-                {paid.agenda.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No hay citas hoy todavía.
-                  </p>
-                ) : (
-                  paid.agenda.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex items-center gap-3 border-b border-[#262019] py-2.5 last:border-b-0"
-                    >
-                      <span className="w-11 shrink-0 text-xs text-muted-foreground">
-                        {a.time}
-                      </span>
-                      <span
-                        className="h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: statusColor[a.bucket] }}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-semibold text-foreground">
-                          {a.client}
-                        </p>
-                        <p className="truncate text-[11px] text-muted-foreground">
-                          {a.service} · {a.barber}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            {agendaPanel}
           </div>
 
           {/* BARBERS + SERVICES + INVENTORY */}
@@ -461,11 +465,14 @@ export default async function DashboardPage() {
           </div>
         </>
       ) : (
-        <Paywall
-          title="Las estadísticas del negocio son de pago"
-          description="Mejora a Pro o Business para ver ingresos, agenda de hoy, desempeño de barberos, servicios más vendidos e inventario."
-          canUpgrade={profile.role === "owner"}
-        />
+        <>
+          {agendaPanel}
+          <Paywall
+            title="Las estadísticas del negocio son de pago"
+            description="Mejora a Pro o Business para ver ingresos, desempeño de barberos, servicios más vendidos e inventario."
+            canUpgrade={profile.role === "owner"}
+          />
+        </>
       )}
 
       {profile.tenants?.slug && <BookingLinkCard slug={profile.tenants.slug} />}
