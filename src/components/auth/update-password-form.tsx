@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { updatePassword, type AuthActionState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Field,
   FieldGroup,
@@ -23,10 +23,9 @@ export function UpdatePasswordForm() {
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="password">Nueva contraseña</FieldLabel>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             autoComplete="new-password"
             required
           />
@@ -35,10 +34,9 @@ export function UpdatePasswordForm() {
 
         <Field>
           <FieldLabel htmlFor="confirmPassword">Confirmar contraseña</FieldLabel>
-          <Input
+          <PasswordInput
             id="confirmPassword"
             name="confirmPassword"
-            type="password"
             autoComplete="new-password"
             required
           />

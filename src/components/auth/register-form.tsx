@@ -5,6 +5,7 @@ import Link from "next/link";
 import { signup, type AuthActionState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Field,
   FieldGroup,
@@ -61,10 +62,9 @@ export function RegisterForm() {
 
         <Field>
           <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             autoComplete="new-password"
             required
           />

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { login, type AuthActionState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Field,
   FieldGroup,
@@ -45,10 +46,9 @@ export function LoginForm({ next }: { next?: string }) {
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             autoComplete="current-password"
             required
           />
