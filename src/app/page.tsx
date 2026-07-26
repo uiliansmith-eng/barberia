@@ -1,3 +1,4 @@
+import { NativeLandingRedirect } from "@/components/native-landing-redirect";
 import { PromoBanner } from "@/components/landing/promo-banner";
 import { Navbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
@@ -10,6 +11,7 @@ import { Footer } from "@/components/landing/footer";
 export default function Home() {
   return (
     <div className="dark bg-mesh-dark bg-background text-foreground flex flex-1 flex-col">
+      <NativeLandingRedirect />
       <PromoBanner />
       <Navbar />
       <main className="flex-1">
