@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Scissors } from "lucide-react";
+import { HideSplashScreen } from "@/components/hide-splash-screen";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -13,6 +14,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="dark bg-mesh-dark bg-background text-foreground flex min-h-screen flex-col items-center justify-center px-6 py-12">
+      <HideSplashScreen />
       <Link
         href="/"
         className="mb-8 flex items-center gap-2 font-semibold tracking-tight text-foreground"

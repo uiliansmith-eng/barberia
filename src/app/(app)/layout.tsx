@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app/sidebar";
 import { getSubscriptionInfo } from "@/lib/subscription";
+import { HideSplashScreen } from "@/components/hide-splash-screen";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -38,6 +39,7 @@ export default async function AppLayout({
 
   return (
     <div className="app-theme flex min-h-screen bg-background text-foreground">
+      <HideSplashScreen />
       <AppSidebar fullName={fullName} role={role} isPaid={isPaid} />
       <main className="min-h-screen flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-0 md:pl-[220px]">
         {children}

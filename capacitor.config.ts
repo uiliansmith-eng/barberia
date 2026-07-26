@@ -32,6 +32,16 @@ const config: CapacitorConfig = {
   // and redirect off the marketing landing page before sending any HTML,
   // instead of flashing it and bouncing client-side.
   appendUserAgent: "BarberOSNativeApp",
+  plugins: {
+    // Keep the native splash up (instead of the default auto-hide-on-load)
+    // until the dashboard/login shell has actually mounted, so the
+    // redirect + data fetch never shows a blank or half-loaded frame.
+    // Hidden explicitly from HideSplashScreen (see (app) and (auth) layouts).
+    SplashScreen: {
+      launchAutoHide: false,
+      backgroundColor: "#141210",
+    },
+  },
 };
 
 export default config;
