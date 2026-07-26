@@ -13,6 +13,11 @@ const config: CapacitorConfig = {
   server: {
     url: "https://barberos.appstles.com",
     cleartext: false,
+    // Stripe Connect onboarding (and its own redirect chain) navigates the
+    // WebView to stripe.com — Capacitor blocks cross-origin navigation by
+    // default, so without this the "Conectar con Stripe" flow silently
+    // goes nowhere.
+    allowNavigation: ["*.stripe.com"],
   },
   android: {
     allowMixedContent: false,
