@@ -11,7 +11,10 @@ const config: CapacitorConfig = {
   appName: "BarberOS",
   webDir: "public",
   server: {
-    url: "https://barberos.appstles.com",
+    // Straight to the dashboard, not the marketing landing page — the
+    // dashboard itself redirects to /login when there's no session, so
+    // this covers both logged-in and logged-out cold starts.
+    url: "https://barberos.appstles.com/dashboard",
     cleartext: false,
     // Stripe Connect onboarding (and its own redirect chain) navigates the
     // WebView to stripe.com — Capacitor blocks cross-origin navigation by
