@@ -41,7 +41,7 @@ export default async function AppLayout({
     <div className="app-theme flex min-h-screen bg-background text-foreground">
       <HideSplashScreen />
       <AppSidebar fullName={fullName} role={role} isPaid={isPaid} />
-      <main className="min-h-screen flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-0 md:pl-[220px]">
+      <main className="min-h-screen min-w-0 flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-0 md:pl-[220px]">
         {children}
       </main>
     </div>
