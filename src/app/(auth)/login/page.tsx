@@ -8,9 +8,9 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; deleted?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, deleted } = await searchParams;
 
   return (
     <>
@@ -20,6 +20,11 @@ export default async function LoginPage({
       <p className="mt-1 mb-6 text-sm text-muted-foreground">
         Accede al panel de tu barbería.
       </p>
+      {deleted && (
+        <p className="mb-4 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground">
+          Tu cuenta se ha eliminado correctamente.
+        </p>
+      )}
       <LoginForm next={next} />
     </>
   );

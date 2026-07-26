@@ -128,7 +128,11 @@ export function AppSidebar({
         </nav>
 
         <div className="mt-5 border-t border-sidebar-border px-6 pt-5">
-          <div className="mb-3 flex items-center gap-2.5">
+          <Link
+            href="/cuenta"
+            onClick={() => setOpen(false)}
+            className="mb-3 flex items-center gap-2.5 rounded-lg -mx-1.5 px-1.5 py-1 hover:bg-sidebar-accent"
+          >
             <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-primary-foreground">
               {getInitials(fullName)}
             </span>
@@ -140,7 +144,7 @@ export function AppSidebar({
                 {roleLabels[role] ?? (role || "—")}
               </div>
             </div>
-          </div>
+          </Link>
           <form action={signOut}>
             <Button type="submit" variant="outline" size="sm" className="w-full">
               Cerrar sesión
