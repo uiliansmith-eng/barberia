@@ -39,7 +39,9 @@ export default async function AppLayout({
   return (
     <div className="app-theme flex min-h-screen bg-background text-foreground">
       <AppSidebar fullName={fullName} role={role} isPaid={isPaid} />
-      <main className="min-h-screen flex-1 pl-[220px]">{children}</main>
+      <main className="min-h-screen flex-1 pt-14 md:pl-[220px] md:pt-0">
+        {children}
+      </main>
     </div>
   );
 }

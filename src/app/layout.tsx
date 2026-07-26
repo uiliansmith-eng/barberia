@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Bebas_Neue } from "next/font/google";
+import { CapacitorNativeBridge } from "@/components/capacitor-native-bridge";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -69,7 +70,10 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${bebasNeue.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <CapacitorNativeBridge />
+        {children}
+      </body>
     </html>
   );
 }
