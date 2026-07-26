@@ -34,34 +34,39 @@ export async function createStripeConnectLink(): Promise<
   const tenant = await getOwnerTenant();
   if (!tenant) return { error: "No autorizado" };
 
-  const stripe = getStripeClient();
-  const admin = createAdminClient();
+  try {
+    const stripe = getStripeClient();
+    const admin = createAdminClient();
 
-  let accountId = tenant.stripe_account_id;
+    let accountId = tenant.stripe_account_id;
 
-  if (!accountId) {
-    const account = await stripe.accounts.create({
-      type: "express",
-      business_type: "individual",
-      metadata: { tenant_id: tenant.id },
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: "express",
+        business_type: "individual",
+        metadata: { tenant_id: tenant.id },
+      });
+      accountId = account.id;
+
+      await admin
+        .from("tenants")
+        .update({ stripe_account_id: accountId })
+        .eq("id", tenant.id);
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${siteUrl}/api/stripe/connect/refresh`,
+      return_url: `${siteUrl}/api/stripe/connect/return`,
+      type: "account_onboarding",
     });
-    accountId = account.id;
 
-    await admin
-      .from("tenants")
-      .update({ stripe_account_id: accountId })
-      .eq("id", tenant.id);
+    return { url: accountLink.url };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error desconocido";
+    return { error: `No se pudo conectar con Stripe: ${message}` };
   }
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `${siteUrl}/api/stripe/connect/refresh`,
-    return_url: `${siteUrl}/api/stripe/connect/return`,
-    type: "account_onboarding",
-  });
-
-  return { url: accountLink.url };
 }
 
 export async function setRequireOnlinePayment(
