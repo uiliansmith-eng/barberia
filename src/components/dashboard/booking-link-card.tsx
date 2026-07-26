@@ -106,7 +106,7 @@ export function BookingLinkCard({ slug }: { slug: string }) {
 
   return (
     <div className="glass rounded-2xl p-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Link2 className="h-5 w-5" />
         </span>
