@@ -1,3 +1,5 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { NativeLandingRedirect } from "@/components/native-landing-redirect";
 import { PromoBanner } from "@/components/landing/promo-banner";
 import { Navbar } from "@/components/landing/navbar";
@@ -8,7 +10,12 @@ import { FAQ } from "@/components/landing/faq";
 import { CTA } from "@/components/landing/cta";
 import { Footer } from "@/components/landing/footer";
 
-export default function Home() {
+export default async function Home() {
+  const userAgent = (await headers()).get("user-agent") ?? "";
+  if (userAgent.includes("BarberOSNativeApp")) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="dark bg-mesh-dark bg-background text-foreground flex flex-1 flex-col">
       <NativeLandingRedirect />

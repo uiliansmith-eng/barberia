@@ -28,6 +28,10 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
   },
+  // Lets the server recognize native app requests (see src/app/page.tsx)
+  // and redirect off the marketing landing page before sending any HTML,
+  // instead of flashing it and bouncing client-side.
+  appendUserAgent: "BarberOSNativeApp",
 };
 
 export default config;
