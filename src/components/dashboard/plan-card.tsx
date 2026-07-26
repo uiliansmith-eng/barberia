@@ -5,6 +5,7 @@ import { Crown, ExternalLink } from "lucide-react";
 import { createBillingPortalSession } from "@/app/(app)/dashboard/subscription-actions";
 import { Button } from "@/components/ui/button";
 import { UpgradeButtons } from "@/components/dashboard/upgrade-buttons";
+import { useIsNativeApp } from "@/lib/use-is-native-app";
 
 const PLAN_LABELS: Record<string, string> = {
   pro: "Pro",
@@ -19,6 +20,7 @@ export function PlanCard({
   status: string | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const isNative = useIsNativeApp();
   const isActive =
     (plan === "pro" || plan === "business") &&
     (status === "active" || status === "trialing");
@@ -45,10 +47,16 @@ export function PlanCard({
       </div>
 
       {plan && isActive ? (
-        <Button size="sm" variant="outline" onClick={handleManage} disabled={pending}>
-          Gestionar suscripción
-          <ExternalLink className="h-3.5 w-3.5" />
-        </Button>
+        isNative ? (
+          <p className="text-xs text-muted-foreground">
+            Gestiona tu suscripción desde barberos.appstles.com
+          </p>
+        ) : (
+          <Button size="sm" variant="outline" onClick={handleManage} disabled={pending}>
+            Gestionar suscripción
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Button>
+        )
       ) : (
         <UpgradeButtons />
       )}
