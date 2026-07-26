@@ -44,7 +44,13 @@ export function AppSidebar({
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground md:hidden">
+      <header
+        className="fixed inset-x-0 top-0 z-30 flex items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground md:hidden"
+        style={{
+          height: "calc(3.5rem + env(safe-area-inset-top))",
+          paddingTop: "env(safe-area-inset-top)",
+        }}
+      >
         <div className="font-logo text-xl leading-none text-sidebar-foreground">
           BARBER<span className="text-primary">OS</span>
         </div>
@@ -67,7 +73,7 @@ export function AppSidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[220px] shrink-0 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar py-7 text-sidebar-foreground transition-transform duration-200 md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-[220px] shrink-0 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar pt-[calc(1.75rem+env(safe-area-inset-top))] pb-7 text-sidebar-foreground transition-transform duration-200 md:translate-x-0 md:pt-7",
           open && "translate-x-0"
         )}
       >
